@@ -7,7 +7,7 @@ require 'rubysh/base_directive'
 require 'rubysh/command'
 require 'rubysh/error'
 require 'rubysh/fd'
-require 'rubysh/pipe'
+require 'rubysh/pipeline'
 require 'rubysh/redirect'
 require 'rubysh/subprocess'
 
@@ -19,7 +19,7 @@ require 'rubysh/subprocess'
 # => Command: ls /tmp | grep myfile
 # Rubysh('ls', '/tmp', Rubysh.stderr > Rubysh.stdout)
 # => Command: ls /tmp 2>&1
-# Rubysh('ls', '/tmp', Rubysh.> '/tmp/outfile.txt')
+# Rubysh('ls', '/tmp', Rubysh.>('/tmp/outfile.txt'))
 # => Command: ls /tmp > /tmp/outfile.txt
 #
 # TODO:
@@ -63,11 +63,10 @@ module Rubysh
     Command.new(*args)
   end
 
-  def self.Pipe(*args)
-    Pipe.new(*args)
+  def self.Pipeline(*args)
+    Pipeline.new(*args)
   end
 
-  # External API methods
   def self.stdin
     FD.new(0)
   end
@@ -79,6 +78,25 @@ module Rubysh
   def self.stderr
     FD.new(2)
   end
+
+  def self.>(target)
+    Redirect.new(1, '>', target)
+  end
+
+  def self.>>(target)
+    Redirect.new(1, '>>', target)
+  end
+
+  def self.<(target)
+    Redirect.new(0, '<', target)
+  end
+
+  # TODO: not sure exactly how this should work.
+  #
+  # Hack to implement <<<
+  # def self.<<
+  #   TripleLessThan.new
+  # end
 
   # Internal utility methods
   def self.log

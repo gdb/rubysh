@@ -19,14 +19,15 @@ module Rubysh
 
     # TODO: switch directives over to an OrderedHash of some form? Really
     # want to preserve the semantics here.
-    def initialize(args, directives=[])
+    def initialize(args, directives=[], post_fork=[])
       raise ArgumentError.new("Must provide an array (#{args.inspect} provided)") unless args.kind_of?(Array)
       raise ArgumentError.new("No command specified (#{args.inspect} provided)") unless args.length > 0
       @command = args[0]
       @args = args[1..-1]
       @directives = directives
 
-      @exec_status = PipeWrapper.new
+      @exec_status = nil
+      @post_fork = post_fork
 
       @pid = nil
       @status = nil
@@ -46,13 +47,22 @@ module Rubysh
     private
 
     def do_run
+      # Create this here so as to not leave an open pipe hanging
+      # around for too long. Not sure what would happen if a child
+      # inherited it.
+      open_exec_status
       @pid = fork do
         do_run_child
       end
       do_run_parent
     end
 
+    def open_exec_status
+      @exec_status = PipeWrapper.new
+    end
+
     def do_run_parent
+      # nil in tests
       @exec_status.read_only
       handle_exec_error
     end
@@ -68,9 +78,15 @@ module Rubysh
     end
 
     def do_run_child
+      # nil in tests
       @exec_status.write_only
+      run_post_fork
       apply_directives
       exec_program
+    end
+
+    def run_post_fork
+      @post_fork.each {|blk| blk.call}
     end
 
     def apply_directives

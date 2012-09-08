@@ -16,7 +16,9 @@ module RubyshTest::Unit
         stdout = mock
         stderr = mock(:reopen => stdout)
 
+        stdout.expects(:kind_of?).with(Integer).returns(false)
         stdout.expects(:kind_of?).with(IO).returns(true)
+        stderr.expects(:kind_of?).with(String).returns(false)
         stderr.expects(:kind_of?).with(IO).returns(true)
 
         IO.expects(:new).never

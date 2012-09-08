@@ -24,7 +24,7 @@ module Rubysh
     end
 
     def <(target)
-      Redirect.new(self, '>', target)
+      Redirect.new(self, '<', target)
     end
 
     def to_s

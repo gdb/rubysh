@@ -22,13 +22,13 @@ module Rubysh
       to_s
     end
 
-    def |(other)
-      Pipe.new(self, other)
-    end
-
     def run
       run_async
       wait
+    end
+
+    def |(other)
+      raise NotImplementedError.new("Override in subclass")
     end
 
     def initialize(args)

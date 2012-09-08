@@ -8,6 +8,7 @@ module RubyshTest::Unit
         Kernel.expects(:exec).with(['cmd', 'cmd'], 'arg1', 'arg2')
 
         proc = Rubysh::Subprocess.new(['cmd', 'arg1', 'arg2'])
+        proc.send(:open_exec_status)
         assert_raises(Rubysh::Error::UnreachableError) do
           proc.send(:do_run_child)
         end
@@ -23,6 +24,7 @@ module RubyshTest::Unit
 
           proc = Rubysh::Subprocess.new(['cmd', 'arg1', 'arg2'],
             [redirect])
+          proc.send(:open_exec_status)
           assert_raises(Rubysh::Error::UnreachableError) do
             proc.send(:do_run_child)
           end

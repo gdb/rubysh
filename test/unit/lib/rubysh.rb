@@ -17,7 +17,7 @@ module RubyshTest::Unit
           subprocess = command.subprocess
           assert_equal('ls', subprocess.command)
           assert_equal(['/tmp'], subprocess.args)
-          assert_equal([], subprocess.opts)
+          assert_equal([], subprocess.directives)
         end
       end
 
@@ -33,15 +33,19 @@ module RubyshTest::Unit
           read_fd, write_fd = stub_pipe
           command = Rubysh('ls', '/tmp') | Rubysh('grep', 'myfile')
 
-          # TODO: have some abstraction for this?
-          command.left.instantiate_subprocess
-          command.right.instantiate_subprocess
+          pipeline = command.pipeline
+          assert_equal(2, pipeline.length)
 
-          left_subprocess = command.left.subprocess
-          right_subprocess = command.right.subprocess
+          left, right = pipeline
 
-          assert_equal([Rubysh::Redirect.new(Rubysh::FD.new(1), write_fd, :gt)], left_subprocess.opts)
-          assert_equal([Rubysh::Redirect.new(Rubysh::FD.new(0), read_fd, :lt)], right_subprocess.opts)
+          left.instantiate_subprocess
+          right.instantiate_subprocess
+
+          left_subprocess = left.subprocess
+          right_subprocess = right.subprocess
+
+          assert_equal([], left_subprocess.directives)
+          assert_equal([], right_subprocess.directives)
         end
       end
 
@@ -59,7 +63,7 @@ module RubyshTest::Unit
           subprocess = command.subprocess
           assert_equal('ls', subprocess.command)
           assert_equal(['/tmp'], subprocess.args)
-          assert_equal([Rubysh::Redirect.new(Rubysh::FD.new(2), Rubysh::FD.new(1), :gt)], subprocess.opts)
+          assert_equal([Rubysh::Redirect.new(Rubysh::FD.new(2), '>', Rubysh::FD.new(1))], subprocess.directives)
         end
       end
     end

@@ -1,6 +1,6 @@
 module Rubysh
   class Command < BaseCommand
-    attr_accessor :args, :extra_opts, :subprocess
+    attr_accessor :args, :extra_directives, :subprocess
 
     def initialize(args)
       @args = args
@@ -8,11 +8,12 @@ module Rubysh
 
       # From things like pipe, where context dictates some properties
       # of how this command is run.
-      @extra_opts = []
+      @extra_directives = []
+      @extra_post_fork = []
     end
 
-    def add_opt(opt)
-      @extra_opts << opt
+    def add_directive(directive)
+      @extra_directives << directive
     end
 
     def stringify
@@ -22,7 +23,7 @@ module Rubysh
     end
 
     def run_async
-      instantiate_subprocess unless @subprocess
+      instantiate_subprocess
       @subprocess.run
     end
 
@@ -30,35 +31,46 @@ module Rubysh
       @subprocess.wait
     end
 
+    def |(other)
+      Pipeline.new([self, other])
+    end
+
+    def post_fork(&blk)
+      @extra_post_fork << blk
+    end
+
     def stdout=(value)
-      opt = FD.new(:stdout) > value
-      add_opt(opt)
+      directive = FD.new(:stdout) > value
+      add_directive(directive)
     end
 
     def stdin=(value)
-      opt = FD.new(:stdin) < value
-      add_opt(opt)
+      directive = FD.new(:stdin) < value
+      add_directive(directive)
     end
 
     def status
       subprocess.status
     end
 
+    # This whole instantiation thing is kind of janky.
     def instantiate_subprocess
-      opts = []
+      return @subprocess if @subprocess
+      directives = []
       args = @args.map do |arg|
         case arg
         when BaseCommand
           raise NotImplementedError.new('Not ready for subshells yet')
         when Redirect
-          opts << arg
+          directives << arg
           nil
         else
           arg
         end
       end.compact
-      opts += @extra_opts
-      @subprocess = Subprocess.new(args, opts)
+      directives += @extra_directives
+      post_forks = @extra_post_fork
+      @subprocess = Subprocess.new(args, directives, post_forks)
     end
   end
 end
