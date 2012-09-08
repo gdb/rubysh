@@ -3,6 +3,7 @@ require 'shellwords'
 
 require 'rubysh/version'
 require 'rubysh/base_command'
+require 'rubysh/base_directive'
 require 'rubysh/command'
 require 'rubysh/error'
 require 'rubysh/fd'
@@ -20,13 +21,17 @@ require 'rubysh/subprocess'
 # => Command: ls /tmp 2>&1
 # Rubysh('ls', '/tmp', Rubysh.> '/tmp/outfile.txt')
 # => Command: ls /tmp > /tmp/outfile.txt
-# Rubysh('ls', '/tmp', Rubysh.&)
-# => Command: ls /tmp &
 #
 # TODO:
+# => Command: (ls; ls) | grep foo
 # => Command: echo <(ls /tmp)
+# => Command: echo >(cat)
 #
-# Need to figure out how to capture FDs in the local process.
+# Need to figure out how to capture output and exit statuses.
+#
+# Not sure this is needed:
+# Rubysh('ls', '/tmp', Rubysh.&)
+# => Command: ls /tmp &
 
 # Either create a new Rubysh command:
 #
@@ -77,7 +82,12 @@ module Rubysh
 
   # Internal utility methods
   def self.log
-    @log ||= Logger.new(STDERR)
+    unless @log
+      @log = Logger.new(STDERR)
+      @log.level = Logger::DEBUG
+    end
+
+    @log
   end
 
   def self.assert(fact, msg, hard=false)

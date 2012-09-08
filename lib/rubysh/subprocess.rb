@@ -14,31 +14,23 @@ require 'rubysh/subprocess/pipe_wrapper'
 
 module Rubysh
   class Subprocess
-    attr_accessor :command, :args, :opts
+    attr_accessor :command, :args, :directives
     attr_accessor :pid, :status, :exec_error
 
-    # TODO: switch opts over to an OrderedHash of some form? Really
+    # TODO: switch directives over to an OrderedHash of some form? Really
     # want to preserve the semantics here.
-    def initialize(args, opts=[])
+    def initialize(args, directives=[])
       raise ArgumentError.new("Must provide an array (#{args.inspect} provided)") unless args.kind_of?(Array)
       raise ArgumentError.new("No command specified (#{args.inspect} provided)") unless args.length > 0
       @command = args[0]
       @args = args[1..-1]
-      @opts = opts
+      @directives = directives
 
       @exec_status = PipeWrapper.new
 
       @pid = nil
       @status = nil
       @exec_error = nil
-
-      # Needed for Ruby 1.8, where we can't set IO objects to not
-      # close the underlying FD on destruction
-      @references = []
-    end
-
-    def hold(io)
-      @references << io
     end
 
     def run
@@ -77,34 +69,20 @@ module Rubysh
 
     def do_run_child
       @exec_status.write_only
-      apply_opts
+      apply_directives
       exec_program
     end
 
-    def apply_opts
-      @opts.each do |key, value|
-        case key
-        when :redirect
-          redirect_fd(*value)
-        else
-          raise Rubysh::Error::BaseError.new("Invalid opt: #{key.inspect}")
-        end
-      end
+    def apply_directives
+      @directives.each {|directive| apply_directive(directive)}
     end
 
-    def redirect_fd(fileno, target)
-      # Coerce to FD number
-      fileno = fileno.fileno if fileno.respond_to?(:fileno)
-
-      # Really just want dup2. The concurrency story here is a bit
-      # off. But should be fine for now.
-      begin
-        io = IO.for_fd(fileno)
-        hold(io)
-        io.reopen(target)
-      rescue Errno::EBADF
-        result = target.fcntl(Fcntl::F_DUPFD, num)
-        Rubysh.assert(result == num, "Tried to open #{num} but ended up with #{result} instead")
+    def apply_directive(directive)
+      case directive
+      when Redirect
+        directive.apply!
+      else
+        raise Rubysh::Error::BaseError.new("Invalid directive: #{directive.inspect}")
       end
     end
 

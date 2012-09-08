@@ -46,16 +46,19 @@ module Rubysh
 
     def instantiate_subprocess
       opts = []
-      @args.map do |arg|
+      args = @args.map do |arg|
         case arg
         when BaseCommand
           raise NotImplementedError.new('Not ready for subshells yet')
-        when FD
-          opts << arg.to_opt
+        when Redirect
+          opts << arg
+          nil
+        else
+          arg
         end
-      end
+      end.compact
       opts += @extra_opts
-      @subprocess = Subprocess.new(@args, opts)
+      @subprocess = Subprocess.new(args, opts)
     end
   end
 end

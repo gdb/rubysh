@@ -30,10 +30,7 @@ module RubyshTest::Unit
         end
 
         it 'creates a command with the expected arguments' do
-          read_fd = stub(:fcntl => nil)
-          write_fd = stub(:fcntl => nil)
-          IO.stubs(:pipe => [read_fd, write_fd])
-
+          read_fd, write_fd = stub_pipe
           command = Rubysh('ls', '/tmp') | Rubysh('grep', 'myfile')
 
           # TODO: have some abstraction for this?
@@ -54,6 +51,15 @@ module RubyshTest::Unit
           command = Rubysh('ls', '/tmp', Rubysh.stderr > Rubysh.stdout)
           expected = 'Command: ls /tmp 2>&1'
           assert_equal(expected, command.to_s)
+        end
+
+        it 'creates a command with the expected arguments' do
+          command = Rubysh('ls', '/tmp', Rubysh.stderr > Rubysh.stdout)
+          command.instantiate_subprocess
+          subprocess = command.subprocess
+          assert_equal('ls', subprocess.command)
+          assert_equal(['/tmp'], subprocess.args)
+          assert_equal([Rubysh::Redirect.new(Rubysh::FD.new(2), Rubysh::FD.new(1), :gt)], subprocess.opts)
         end
       end
     end

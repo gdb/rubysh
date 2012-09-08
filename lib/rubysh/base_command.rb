@@ -7,7 +7,7 @@ module Rubysh
   class BaseCommand
     def stringify_arg(arg)
       case arg
-      when BaseCommand
+      when BaseCommand, BaseDirective
         arg.stringify
       else
         arg.to_s

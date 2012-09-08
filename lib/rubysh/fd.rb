@@ -20,11 +20,11 @@ module Rubysh
     end
 
     def >(target)
-      Redirect.new(self, target, :gt)
+      Redirect.new(self, '>', target)
     end
 
     def <(target)
-      Redirect.new(self, target, :lt)
+      Redirect.new(self, '>', target)
     end
 
     def to_s
