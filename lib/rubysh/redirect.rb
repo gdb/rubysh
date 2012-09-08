@@ -41,7 +41,7 @@ module Rubysh
     end
 
     def ==(other)
-      self.type == other.type &&
+      self.class == other.class &&
         self.coerced_source == other.coerced_source &&
         self.coerced_target == other.coerced_target
     end

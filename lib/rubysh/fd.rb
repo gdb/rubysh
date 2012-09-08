@@ -32,7 +32,7 @@ module Rubysh
     end
 
     def ==(other)
-      self.type == other.type &&
+      self.class == other.class &&
         self.fileno == other.fileno
     end
   end

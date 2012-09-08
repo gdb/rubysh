@@ -1,10 +1,18 @@
 module Rubysh
   class Command < BaseCommand
-    attr_accessor :subprocess
+    attr_accessor :args, :extra_opts, :subprocess
 
     def initialize(args)
       @args = args
-      instantiate_subprocess
+      @subprocess = nil
+
+      # From things like pipe, where context dictates some properties
+      # of how this command is run.
+      @extra_opts = []
+    end
+
+    def add_opt(opt)
+      @extra_opts << opt
     end
 
     def stringify
@@ -14,6 +22,7 @@ module Rubysh
     end
 
     def run_async
+      instantiate_subprocess unless @subprocess
       @subprocess.run
     end
 
@@ -23,12 +32,12 @@ module Rubysh
 
     def stdout=(value)
       opt = FD.new(:stdout) > value
-      @subprocess.add_opt(opt)
+      add_opt(opt)
     end
 
     def stdin=(value)
       opt = FD.new(:stdin) < value
-      @subprocess.add_opt(opt)
+      add_opt(opt)
     end
 
     def status
@@ -45,7 +54,8 @@ module Rubysh
           opts << arg.to_opt
         end
       end
-      @subprocess = Subprocess.new(@args)
+      opts += @extra_opts
+      @subprocess = Subprocess.new(@args, opts)
     end
   end
 end

@@ -13,6 +13,7 @@ module RubyshTest::Unit
 
         it 'creates a command with the expected arguments' do
           command = Rubysh('ls', '/tmp')
+          command.instantiate_subprocess
           subprocess = command.subprocess
           assert_equal('ls', subprocess.command)
           assert_equal(['/tmp'], subprocess.args)
@@ -34,6 +35,10 @@ module RubyshTest::Unit
           IO.stubs(:pipe => [read_fd, write_fd])
 
           command = Rubysh('ls', '/tmp') | Rubysh('grep', 'myfile')
+
+          # TODO: have some abstraction for this?
+          command.left.instantiate_subprocess
+          command.right.instantiate_subprocess
 
           left_subprocess = command.left.subprocess
           right_subprocess = command.right.subprocess

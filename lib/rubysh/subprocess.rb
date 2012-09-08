@@ -41,10 +41,6 @@ module Rubysh
       @references << io
     end
 
-    def add_opt(opt)
-      @opts << opt
-    end
-
     def run
       do_run unless @pid
       @pid
