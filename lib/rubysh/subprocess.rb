@@ -14,21 +14,35 @@ require 'rubysh/subprocess/pipe_wrapper'
 
 module Rubysh
   class Subprocess
-    attr_accessor :command, :args
+    attr_accessor :command, :args, :opts
     attr_accessor :pid, :status, :exec_error
 
-    def initialize(args)
-      raise ArgumentError.new("Must provide an array") unless args.kind_of?(Array)
-      raise ArgumentError.new("No command specified") unless args.length > 0
+    # TODO: switch opts over to an OrderedHash of some form? Really
+    # want to preserve the semantics here.
+    def initialize(args, opts=[])
+      raise ArgumentError.new("Must provide an array (#{args.inspect} provided)") unless args.kind_of?(Array)
+      raise ArgumentError.new("No command specified (#{args.inspect} provided)") unless args.length > 0
       @command = args[0]
       @args = args[1..-1]
+      @opts = opts
 
       @exec_status = PipeWrapper.new
-      @exec_status.cloexec
 
       @pid = nil
       @status = nil
       @exec_error = nil
+
+      # Needed for Ruby 1.8, where we can't set IO objects to not
+      # close the underlying FD on destruction
+      @references = []
+    end
+
+    def hold(io)
+      @references << io
+    end
+
+    def add_opt(opt)
+      @opts << opt
     end
 
     def run
@@ -45,10 +59,14 @@ module Rubysh
 
     def do_run
       @pid = fork do
-        @exec_status.write_only
-        do_exec
+        do_run_child
       end
+      do_run_parent
+    end
+
+    def do_run_parent
       @exec_status.read_only
+      handle_exec_error
     end
 
     def do_wait(nonblock=false)
@@ -59,13 +77,45 @@ module Rubysh
       Rubysh.assert(pid == @pid,
         "Process.waitpid2 returned #{pid} while waiting for #{@pid}",
         true)
-      handle_exec_error
     end
 
-    def do_exec
+    def do_run_child
+      @exec_status.write_only
+      apply_opts
+      exec_program
+    end
+
+    def apply_opts
+      @opts.each do |key, value|
+        case key
+        when :redirect
+          redirect_fd(*value)
+        else
+          raise Rubysh::Error::BaseError.new("Invalid opt: #{key.inspect}")
+        end
+      end
+    end
+
+    def redirect_fd(fileno, target)
+      # Coerce to FD number
+      fileno = fileno.fileno if fileno.respond_to?(:fileno)
+
+      # Really just want dup2. The concurrency story here is a bit
+      # off. But should be fine for now.
+      begin
+        io = IO.for_fd(fileno)
+        hold(io)
+        io.reopen(target)
+      rescue Errno::EBADF
+        result = target.fcntl(Fcntl::F_DUPFD, num)
+        Rubysh.assert(result == num, "Tried to open #{num} but ended up with #{result} instead")
+      end
+    end
+
+    def exec_program
       begin
         Kernel.exec([command, command], *args)
-        raise Rubysh::Error::BaseError.new("This code should be unreachable. If you are seeing this exception, it means someone overrode Kernel.exec. That's not very nice of them.")
+        raise Rubysh::Error::UnreachableError.new("This code should be unreachable. If you are seeing this exception, it means someone overrode Kernel.exec. That's not very nice of them.")
       rescue Exception => e
         msg = {
           'message' => e.message,

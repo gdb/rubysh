@@ -12,5 +12,7 @@ module Rubysh
         @caller = caller
       end
     end
+
+    class UnreachableError < BaseError; end
   end
 end

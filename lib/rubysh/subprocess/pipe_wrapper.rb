@@ -4,6 +4,7 @@ class Rubysh::Subprocess
 
     def initialize
       @reader, @writer = IO.pipe
+      cloexec
     end
 
     def read_only
@@ -14,9 +15,22 @@ class Rubysh::Subprocess
       @reader.close
     end
 
+    def close
+      @writer.close
+      @reader.close
+    end
+
     def cloexec
-      @reader.fcntl(Fcntl::F_SETFD, Fcntl::FD_CLOEXEC)
-      @writer.fcntl(Fcntl::F_SETFD, Fcntl::FD_CLOEXEC)
+      [@reader, @writer].each do |fd|
+        fd.fcntl(Fcntl::F_SETFD, Fcntl::FD_CLOEXEC)
+      end
+    end
+
+    def nonblock
+      [@reader, @writer].each do |fd|
+        fl = fd.fcntl(Fcntl::F_GETFL)
+        fd.fcntl(Fcntl::F_SETFL, fl | Fcntl::O_NONBLOCK)
+      end
     end
 
     def dump_yaml_and_close(msg)

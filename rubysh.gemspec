@@ -14,4 +14,7 @@ Gem::Specification.new do |gem|
   gem.name          = "rubysh"
   gem.require_paths = ["lib"]
   gem.version       = Rubysh::VERSION
+
+  gem.add_development_dependency 'minitest', '3.1.0'
+  gem.add_development_dependency 'mocha'
 end
