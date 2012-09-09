@@ -27,7 +27,26 @@ require 'rubysh/subprocess'
 # => Command: echo <(ls /tmp)
 # => Command: echo >(cat)
 #
-# Need to figure out how to capture output and exit statuses.
+# If you want to capture output:
+#
+# Rubysh('cat', Rubysh.stdout > :pipe)
+#
+# Or for interactivity:
+#
+# q = Rubysh('cat', Rubysh.stdout > :pipe, Rubysh.stderr > :pipe, Rubysh.stdin < :pipe)
+# q.write('my whole command')
+# q.communicate # closes writeable pipes and reads from all readable pipes
+# q.data_from(:stdout)
+# q.data_from(1)
+# q.status
+#
+# This API is a WIP:
+#
+# q.write('my first command') # write data (while also reading from readable pipes
+#                             # in a select() loop)
+# q.communicate(:partial => true) # read available data (don't close pipes)
+# q.data_from(:stdout)
+# q.write('my second command')
 #
 # Not sure this is needed:
 # Rubysh('ls', '/tmp', Rubysh.&)
