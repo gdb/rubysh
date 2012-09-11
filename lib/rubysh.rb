@@ -130,7 +130,7 @@ module Rubysh
   def self.log
     unless @log
       @log = Logger.new(STDERR)
-      @log.level = Logger::DEBUG
+      @log.level = Logger::WARN
     end
 
     @log
