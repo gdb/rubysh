@@ -16,6 +16,12 @@ module Rubysh
       @command.prepare!(self)
     end
 
+    def data(target_name)
+      state = target_state(target_name)
+      raise Rubysh::Error::BaseError.new("Can only access data for readable FDs") unless state[:target_reading?]
+      state[:buffer].join
+    end
+
     def run_async
       @command.start_async(self)
     end
@@ -36,20 +42,12 @@ module Rubysh
       @parallel_io.run
     end
 
-    # For internal use
-    def state(object)
-      @state[object] ||= {}
-    end
-
-    def target_state(target_name)
-      @targets[target_name] || raise(Rubysh::Error::BaseError.new("Invalid target: #{target_name.inspect} (valid targets are: #{@targets.keys.inspect})"))
-    end
-
     def readers
       readers = {}
       @targets.each do |target_name, target_state|
         next unless target_state[:target_reading?]
-        readers[target_name] = target_state[:target]
+        target = target_state[:target]
+        readers[target] = target_name
       end
       readers
     end
@@ -58,13 +56,26 @@ module Rubysh
       writers = {}
       @targets.each do |target_name, target_state|
         next if target_state[:target_reading?]
-        writers[target_name] = target_state[:target]
+        target = target_state[:target]
+        writers[target] = target_name
       end
       writers
     end
 
+    # Internal helpers
+    def state(object)
+      @state[object] ||= {}
+    end
+
+    # Internal helpers
+    def target_state(target_name)
+      @targets[target_name] || raise(Rubysh::Error::BaseError.new("Invalid target: #{target_name.inspect} (valid targets are: #{@targets.keys.inspect})"))
+    end
+
     private
 
+    # Can't build this in the prepare stage because pipes aren't built
+    # there.
     def prepare_io
       @parallel_io = Subprocess::ParallelIO.new(readers, writers)
       @parallel_io.on_read do |target_name, data|
