@@ -78,8 +78,9 @@ end
 
 module Rubysh
   # Convenience methods
-  def self.run(cmd)
-    cmd.run
+  def self.run(command)
+    command = Rubysh::Command.new(command) unless command.kind_of?(Rubysh::Command)
+    command.run
   end
 
   def self.Command(*args)
