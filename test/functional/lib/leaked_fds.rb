@@ -1,13 +1,32 @@
 require File.expand_path('../_lib', File.dirname(__FILE__))
+require 'shellwords'
 
 module RubyshTest::Functional
   class LeakedFDsTest < FunctionalTest
+    # Try to remove inteference from other tests
+    def close_high_fds
+      begin
+        (3..20).each do |fd|
+          begin
+            io = IO.new(fd)
+          rescue Errno::EBADF
+          else
+            io.close
+          end
+        end
+      end
+    end
+
     def parse_lsof(stdout)
       pids = []
       stdout.split("\n").each do |line|
         pids << $1.to_i if line =~ /\Af(\d+)\Z/
       end
       pids
+    end
+
+    before do
+      close_high_fds
     end
 
     describe 'when spawning with no pipe' do

@@ -3,6 +3,8 @@ module Rubysh
     attr_accessor :command, :targets
 
     def initialize(command)
+      @runner_state = :initialized
+
       @command = command
       @targets = {}
       @state = {}
@@ -24,6 +26,11 @@ module Rubysh
       @command.status(self)
     end
 
+    def pid(command=nil)
+      command ||= @command
+      @command.pid(self)
+    end
+
     # Convenience wrapper
     def exitstatus(command=nil)
       if st = full_status(command)
@@ -33,24 +40,23 @@ module Rubysh
       end
     end
 
+    # API for running/waiting
     def run_async
+      raise Rubysh::Error::AlreadyRunError.new("You have already run this #{self.class} instance. Cannot run again. You can run its command directly though, which will create a fresh #{self.class} instance.") unless @runner_state == :initialized
       @command.start_async(self)
+      @runner_state = :started
+      self
     end
 
     def wait
-      @command.wait(self)
+      run_io
+      do_wait
     end
 
     def run
       run_async
       run_io
-      wait
-      self
-    end
-
-    def run_io
-      prepare_io unless @parallel_io
-      @parallel_io.run
+      do_wait
     end
 
     def readers
@@ -73,6 +79,27 @@ module Rubysh
       writers
     end
 
+    def to_s
+      inspect
+    end
+
+    def inspect
+      extras = []
+      valid_readers = readers.values.map(&:inspect).join(', ')
+      valid_writers = readers.values.map(&:inspect).join(', ')
+
+      extras << "readers: #{valid_readers}" if valid_readers.length > 0
+      extras << "writers: #{valid_writers}" if valid_writers.length > 0
+      if status = exitstatus
+        extras << "exitstatus: #{status}"
+      elsif mypid = pid
+        extras << "pid: #{pid}"
+      end
+      extra_display = extras.length > 0 ? " (#{extras.join(', ')})" : nil
+
+      "#{self.class}: #{command.stringify}#{extra_display}"
+    end
+
     # Internal helpers
     def state(object)
       @state[object] ||= {}
@@ -84,6 +111,21 @@ module Rubysh
     end
 
     private
+
+    def do_wait
+      raise Rubysh::Error::AlreadyRunError.new("You must run parallel io before waiting. (Perhaps you want to use the 'run' method, which takes care of the plumbing for you?)") unless @runner_state == :parallel_io_ran
+      @command.wait(self)
+      @runner_state = :waited
+      self
+    end
+
+    def run_io
+      raise Rubysh::Error::AlreadyRunError.new("You must start the subprocesses before running parallel io. (Perhaps you want to use the 'run' method, which takes care of the plumbing for you?)") unless @runner_state == :started
+      prepare_io unless @parallel_io
+      @parallel_io.run
+      @runner_state = :parallel_io_ran
+      self
+    end
 
     def prepare!
       @command.prepare!(self)

@@ -15,11 +15,11 @@ module Rubysh
         case arg
         when BaseCommand
           raise NotImplementedError.new('Not ready for subshells yet')
-        when Redirect
+        when BaseDirective
           @directives << arg
           nil
         else
-          arg
+          arg.to_s
         end
       end.compact
     end
@@ -50,6 +50,10 @@ module Rubysh
 
     def status(runner)
       state(runner)[:subprocess].status
+    end
+
+    def pid(runner)
+      state(runner)[:subprocess].pid
     end
 
     def prepare!(runner)

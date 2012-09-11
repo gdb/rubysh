@@ -1,5 +1,4 @@
 require 'logger'
-require 'shellwords'
 
 require 'rubysh/version'
 require 'rubysh/base_command'
@@ -11,6 +10,7 @@ require 'rubysh/pipeline'
 require 'rubysh/redirect'
 require 'rubysh/runner'
 require 'rubysh/subprocess'
+require 'rubysh/triple_less_than'
 require 'rubysh/util'
 
 # Command:
@@ -74,7 +74,6 @@ def Rubysh(*args, &blk)
     command = blk.call
     command = Rubysh::Command.new(command) unless command.kind_of?(Rubysh::Command)
     command.run
-    command
   else
     Rubysh::Command.new(args)
   end
@@ -93,6 +92,10 @@ module Rubysh
 
   def self.Pipeline(*args)
     Pipeline.new(*args)
+  end
+
+  def self.FD(*args)
+    FD.new(*args)
   end
 
   def self.stdin
@@ -119,12 +122,11 @@ module Rubysh
     Redirect.new(0, '<', target)
   end
 
-  # TODO: not sure exactly how this should work.
-  #
   # Hack to implement <<<
-  # def self.<<
-  #   TripleLessThan.new
-  # end
+  def self.<<(fd=nil)
+    fd ||= FD.new(0)
+    TripleLessThan::Shell.new(fd)
+  end
 
   # Internal utility methods
   def self.log

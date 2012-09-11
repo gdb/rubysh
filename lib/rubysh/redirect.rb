@@ -11,13 +11,6 @@ module Rubysh
   class Redirect < BaseDirective
     VALID_DIRECTIONS = ['<', '>', '>>']
 
-    @references = []
-    def self.hold(*references)
-      # Needed for Ruby 1.8, where we can't set IO objects to not
-      # close the underlying FD on destruction
-      @references += references
-    end
-
     attr_accessor :source, :direction, :target
 
     def initialize(source, direction, target)
@@ -29,8 +22,8 @@ module Rubysh
         raise Rubysh::Error::BaseError.new("Invalid source: #{source.inspect}. Source must be an IO, a Rubysh::FD, or an Integer.")
       end
 
-      unless target.kind_of?(IO) || target.kind_of?(FD) || target.kind_of?(Integer) || target.kind_of?(String) || target.kind_of?(Symbol)
-        raise Rubysh::Error::BaseError.new("Invalid target: #{target.inspect}. Target an IO, a Rubysh::FD, an Integer, a String, or a Symbol.")
+      unless target.respond_to?(:fileno) || target.kind_of?(Integer) || target.kind_of?(String) || target.kind_of?(Symbol)
+        raise Rubysh::Error::BaseError.new("Invalid target: #{target.inspect}. Target must respond to :fileno or be an Integer, a String, or a Symbol.")
       end
 
       @source = source
@@ -147,8 +140,8 @@ module Rubysh
       source_fd = Util.to_fileno(source)
 
       # Copy target -> source
-      dup2(target_fd, source_fd)
-      set_cloexec(source_fd, false)
+      Util.dup2(target_fd, source_fd)
+      Util.set_cloexec(source_fd, false)
     end
 
     private
@@ -160,7 +153,7 @@ module Rubysh
       file = Util.to_fileno(file)
 
       if file.kind_of?(Integer)
-        io = io_without_autoclose(file)
+        io = Util.io_without_autoclose(file)
         # Someone else opened
         default_to_cloexec = false
       elsif file.kind_of?(String) && reading?
@@ -183,43 +176,6 @@ module Rubysh
 
       io.fcntl(Fcntl::F_SETFD, Fcntl::FD_CLOEXEC) if default_to_cloexec
       io
-    end
-
-    # Leaks memory (needed to avoid Ruby 1.8's IO autoclose behavior),
-    # and so you should only use it right before execing.
-    def io_without_autoclose(fd_num)
-      io = IO.new(fd_num)
-      self.class.hold(io)
-      io
-    end
-
-    # Should really just shell out to dup2, but looks like we'd need a
-    # C extension to do so. The concurrency story here is a bit off,
-    # and this probably doesn't copy over all FD state
-    # properly. Should be fine for now.
-    def dup2(fildes, fildes2)
-      original = io_without_autoclose(fildes)
-
-      begin
-        copy = io_without_autoclose(fildes2)
-      rescue Errno::EBADF
-      else
-        copy.close
-      end
-
-      res = original.fcntl(Fcntl::F_DUPFD, fildes2)
-      Rubysh.assert(res == fildes2, "Tried to open #{fildes2} but ended up with #{res} instead", true)
-    end
-
-    def set_cloexec(file, enable=true)
-      file = io_without_autoclose(file) unless file.kind_of?(IO)
-      value = enable ? Fcntl::FD_CLOEXEC : 0
-      file.fcntl(Fcntl::F_SETFD, value)
-    end
-
-    # TODO: DRY up?
-    def state(runner)
-      runner.state(self)
     end
   end
 end

@@ -13,6 +13,10 @@ module Rubysh
       @pipeline[-1].status(runner)
     end
 
+    def pid(runner)
+      @pipeline[-1].pid(runner)
+    end
+
     def prepare!(runner)
       @pipeline.each {|command| command.prepare!(runner)}
     end

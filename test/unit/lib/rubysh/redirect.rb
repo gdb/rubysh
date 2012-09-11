@@ -17,8 +17,8 @@ module RubyshTest::Unit
         IO.expects(:new).never
 
         redirect = Rubysh::Redirect.new(stderr, '>', stdout)
-        redirect.expects(:dup2).once.with(1, 2)
-        redirect.expects(:set_cloexec).once.with(2, false)
+        Rubysh::Util.expects(:dup2).once.with(1, 2)
+        Rubysh::Util.expects(:set_cloexec).once.with(2, false)
 
         redirect.apply!(runner)
       end
@@ -34,8 +34,8 @@ module RubyshTest::Unit
         stdout = stub(:fileno => 1)
 
         redirect = Rubysh::Redirect.new(3, '>', 1)
-        redirect.expects(:dup2).once.with(1, 3)
-        redirect.expects(:set_cloexec).once.with(3, false)
+        Rubysh::Util.expects(:dup2).once.with(1, 3)
+        Rubysh::Util.expects(:set_cloexec).once.with(3, false)
 
         redirect.apply!(runner)
       end

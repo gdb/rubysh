@@ -1,3 +1,5 @@
+require 'shellwords'
+
 module Rubysh
   # TODO:
   #
@@ -8,7 +10,7 @@ module Rubysh
       when BaseCommand, BaseDirective
         arg.stringify
       else
-        arg.to_s
+        Shellwords.shellescape(arg.to_s)
       end
     end
 

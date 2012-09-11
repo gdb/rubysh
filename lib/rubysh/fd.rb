@@ -27,6 +27,10 @@ module Rubysh
       Redirect.new(self, '<', target)
     end
 
+    def <<
+      Rubysh.<<(self)
+    end
+
     def to_s
       "FD: #{@fileno}"
     end
