@@ -33,12 +33,16 @@ require 'rubysh/subprocess'
 #
 # Or for interactivity:
 #
-# q = Rubysh('cat', Rubysh.stdout > :pipe, Rubysh.stderr > :pipe, Rubysh.stdin < :pipe)
+# q = Rubysh('cat', Rubysh.stdout > :stdout, Rubysh.stderr > :stderr, Rubysh.stdin < :stdin)
 # q.write('my whole command')
 # q.communicate # closes writeable pipes and reads from all readable pipes
 # q.data_from(:stdout)
 # q.data_from(1)
 # q.status
+#
+# You can name pipes with whatever symbol name you want:
+#
+# Rubysh('cat', 2 > :stdout, 3 > :fd3)
 #
 # This API is a WIP:
 #
