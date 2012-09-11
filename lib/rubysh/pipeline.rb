@@ -1,9 +1,4 @@
 module Rubysh
-  # TODO: pipes should not win out over redirects. Currently:
-  #
-  # ls /tmp >/tmp/outfile.txt | cat
-  #
-  # does the wrong thing.
   class Pipeline < BaseCommand
     attr_accessor :pipeline
 

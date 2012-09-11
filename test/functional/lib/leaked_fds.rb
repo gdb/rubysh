@@ -1,7 +1,7 @@
 require File.expand_path('../_lib', File.dirname(__FILE__))
 
 module RubyshTest::Functional
-  class RubyshTest < FunctionalTest
+  class LeakedFDsTest < FunctionalTest
     def parse_lsof(stdout)
       pids = []
       stdout.split("\n").each do |line|

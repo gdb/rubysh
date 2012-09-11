@@ -88,7 +88,9 @@ module Rubysh
     end
 
     def prepare_subprocess(runner)
-      directives = @directives + extra_directives(runner)
+      # extras first because they are currently only used for
+      # pipeline, which should not win out over internal redirects.
+      directives = extra_directives(runner) + @directives
       post_forks = extra_post_forks(runner)
       state(runner)[:subprocess] = Subprocess.new(args, directives, post_forks, runner)
     end
