@@ -1,3 +1,5 @@
+require 'set'
+
 module Rubysh
   module Util
     def self.to_fileno(file)

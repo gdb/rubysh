@@ -14,5 +14,6 @@ module Rubysh
     end
 
     class UnreachableError < BaseError; end
+    class AlreadyClosedError < BaseError; end
   end
 end

@@ -2,9 +2,10 @@ class Rubysh::Subprocess
   class PipeWrapper
     attr_accessor :reader, :writer
 
-    def initialize(set_cloexec=true)
+    def initialize(reader_cloexec=true, writer_cloexec=true)
       @reader, @writer = IO.pipe
-      cloexec if set_cloexec
+      set_reader_cloexec if reader_cloexec
+      set_writer_cloexec if writer_cloexec
     end
 
     def read_only
@@ -20,10 +21,12 @@ class Rubysh::Subprocess
       @reader.close
     end
 
-    def cloexec
-      [@reader, @writer].each do |fd|
-        fd.fcntl(Fcntl::F_SETFD, Fcntl::FD_CLOEXEC)
-      end
+    def set_reader_cloexec
+      @reader.fcntl(Fcntl::F_SETFD, Fcntl::FD_CLOEXEC)
+    end
+
+    def set_writer_cloexec
+      @writer.fcntl(Fcntl::F_SETFD, Fcntl::FD_CLOEXEC)
     end
 
     def nonblock

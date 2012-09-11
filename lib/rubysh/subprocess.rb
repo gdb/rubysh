@@ -10,6 +10,7 @@ require 'thread'
 # post-exec.)
 require 'yaml'
 
+require 'rubysh/subprocess/parallel_io'
 require 'rubysh/subprocess/pipe_wrapper'
 
 module Rubysh
