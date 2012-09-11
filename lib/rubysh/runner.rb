@@ -12,14 +12,25 @@ module Rubysh
       prepare!
     end
 
-    def prepare!
-      @command.prepare!(self)
-    end
-
     def data(target_name)
       state = target_state(target_name)
       raise Rubysh::Error::BaseError.new("Can only access data for readable FDs") unless state[:target_reading?]
       state[:buffer].join
+    end
+
+    # Ruby's Process::Status. Has fun things like pid and signaled?
+    def full_status(command=nil)
+      command ||= @command
+      @command.status(self)
+    end
+
+    # Convenience wrapper
+    def exitstatus(command=nil)
+      if st = full_status(command)
+        st.exitstatus
+      else
+        nil
+      end
     end
 
     def run_async
@@ -73,6 +84,10 @@ module Rubysh
     end
 
     private
+
+    def prepare!
+      @command.prepare!(self)
+    end
 
     # Can't build this in the prepare stage because pipes aren't built
     # there.

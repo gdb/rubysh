@@ -8,7 +8,14 @@ module Rubysh
     attr_accessor :pipeline
 
     def initialize(pipeline)
+      raise Rubysh::Error::BaseError.new("Cannot create an empty pipeline") if pipeline.length == 0
       @pipeline = pipeline
+    end
+
+    # sh semantics are that your exitstatus is that of the last in the
+    # pipeline
+    def status(runner)
+      @pipeline[-1].status(runner)
     end
 
     def prepare!(runner)
@@ -28,8 +35,6 @@ module Rubysh
     end
 
     def start_async(runner)
-      return unless @pipeline.length > 0
-
       last_pipe = nil
 
       pipeline_pairs.each do |left, right|

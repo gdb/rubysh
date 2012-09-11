@@ -28,6 +28,8 @@ require 'rubysh/util'
 # => Command: (ls; ls) | grep foo
 # => Command: echo <(ls /tmp)
 # => Command: echo >(cat)
+# something like the following to tee output:
+# Rubysh('cat', Rubysh.stdout >> :pipe)
 #
 # If you want to capture output:
 #
