@@ -2,9 +2,9 @@ class Rubysh::Subprocess
   class PipeWrapper
     attr_accessor :reader, :writer
 
-    def initialize
+    def initialize(set_cloexec=true)
       @reader, @writer = IO.pipe
-      cloexec
+      cloexec if set_cloexec
     end
 
     def read_only

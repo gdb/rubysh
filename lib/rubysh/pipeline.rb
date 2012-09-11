@@ -11,8 +11,8 @@ module Rubysh
       @pipeline = pipeline
     end
 
-    def instantiate_subprocess
-      @pipeline.each {|cmd| cmd.instantiate_subprocess}
+    def prepare!(runner)
+      @pipeline.each {|command| command.prepare!(runner)}
     end
 
     def pipeline_pairs
@@ -27,7 +27,7 @@ module Rubysh
       self.class.new(pipeline + [other])
     end
 
-    def run_async
+    def start_async(runner)
       return unless @pipeline.length > 0
 
       last_pipe = nil
@@ -39,31 +39,28 @@ module Rubysh
         # Don't want to have more than 2 pipes open at a time, so need
         # to #run_async and #close here.
         pipe = Subprocess::PipeWrapper.new
-        setup_pipe(pipe, left, right)
+        setup_pipe(runner, pipe, left, right)
 
-        left.run_async
+        left.start_async(runner)
         last_pipe.close if last_pipe
         last_pipe = pipe
       end
 
-      @pipeline[-1].run_async
+      @pipeline[-1].start_async(runner)
       last_pipe.close if last_pipe
     end
 
-    def setup_pipe(pipe, left, right)
-      left.stdout = pipe.writer
-      left.post_fork {pipe.write_only}
-
-      right.stdin = pipe.reader
-      right.post_fork {pipe.read_only}
+    def setup_pipe(runner, pipe, left, right)
+      left.set_stdout(runner, pipe.writer)
+      right.set_stdin(runner, pipe.reader)
     end
 
-    def wait
+    def wait(runner)
       # It's likely we should actually wait for these in parallel; I'm
       # not really sure right now. Might be tricky to avoid waiting
       # for other processes run by this program (could probably use
       # process groups for that?)
-      @pipeline.each {|cmd| cmd.wait}
+      @pipeline.each {|cmd| cmd.wait(runner)}
     end
   end
 end

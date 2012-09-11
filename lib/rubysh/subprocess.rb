@@ -14,17 +14,20 @@ require 'rubysh/subprocess/pipe_wrapper'
 
 module Rubysh
   class Subprocess
-    attr_accessor :command, :args, :directives
+    attr_accessor :command, :args, :directives, :runner
     attr_accessor :pid, :status, :exec_error
 
     # TODO: switch directives over to an OrderedHash of some form? Really
     # want to preserve the semantics here.
-    def initialize(args, directives=[], post_fork=[])
+    def initialize(args, directives=[], post_fork=[], runner=nil)
       raise ArgumentError.new("Must provide an array (#{args.inspect} provided)") unless args.kind_of?(Array)
       raise ArgumentError.new("No command specified (#{args.inspect} provided)") unless args.length > 0
       @command = args[0]
       @args = args[1..-1]
       @directives = directives
+      @runner = runner
+
+      Rubysh.assert(@directives.length == 0 || @runner, "Directives provided but no runner is", true)
 
       @exec_status = nil
       @post_fork = post_fork
@@ -32,6 +35,12 @@ module Rubysh
       @pid = nil
       @status = nil
       @exec_error = nil
+
+      Rubysh.log.debug("Just created: #{self}")
+    end
+
+    def to_s
+      "Subprocess: command=#{@command.inspect} args=#{@args.inspect} directives: #{@directives.inspect}"
     end
 
     def run
@@ -64,6 +73,7 @@ module Rubysh
     def do_run_parent
       # nil in tests
       @exec_status.read_only
+      apply_directives_parent
       handle_exec_error
     end
 
@@ -81,7 +91,7 @@ module Rubysh
       # nil in tests
       @exec_status.write_only
       run_post_fork
-      apply_directives
+      apply_directives_child
       exec_program
     end
 
@@ -89,16 +99,23 @@ module Rubysh
       @post_fork.each {|blk| blk.call}
     end
 
-    def apply_directives
-      @directives.each {|directive| apply_directive(directive)}
+    def apply_directives_parent
+      apply_directives(true)
     end
 
-    def apply_directive(directive)
-      case directive
-      when Redirect
-        directive.apply!
+    def apply_directives_child
+      apply_directives(false)
+    end
+
+    def apply_directives(is_parent)
+      @directives.each {|directive| apply_directive(directive, is_parent)}
+    end
+
+    def apply_directive(directive, is_parent)
+      if is_parent
+        directive.apply_parent!(runner)
       else
-        raise Rubysh::Error::BaseError.new("Invalid directive: #{directive.inspect}")
+        directive.apply!(runner)
       end
     end
 

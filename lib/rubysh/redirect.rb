@@ -29,8 +29,8 @@ module Rubysh
         raise Rubysh::Error::BaseError.new("Invalid source: #{source.inspect}. Source must be an IO, a Rubysh::FD, or an Integer.")
       end
 
-      unless target.kind_of?(IO) || target.kind_of?(FD) || target.kind_of?(Integer) || target.kind_of?(String)
-        raise Rubysh::Error::BaseError.new("Invalid target: #{target.inspect}. Target an IO, a Rubysh::FD, an Integer, or a String.")
+      unless target.kind_of?(IO) || target.kind_of?(FD) || target.kind_of?(Integer) || target.kind_of?(String) || target.kind_of?(Symbol)
+        raise Rubysh::Error::BaseError.new("Invalid target: #{target.inspect}. Target an IO, a Rubysh::FD, an Integer, a String, or a Symbol.")
       end
 
       @source = source
@@ -38,25 +38,12 @@ module Rubysh
       @direction = direction
     end
 
-    def apply!
-      Rubysh.log.info("About to apply #{self} for #{$$}")
-      # Open the target
-      target_io = file_as_io(target)
-
-      target_fd = file_as_fd(target_io)
-      source_fd = file_as_fd(source)
-
-      # Copy target -> source
-      dup2(target_fd, source_fd)
-      set_cloexec(source_fd, false)
-    end
-
     def printable_source
-      to_fileno(source)
+      Util.to_fileno(source)
     end
 
     def printable_target
-      to_fileno(target)
+      Util.to_fileno(target)
     end
 
     # TODO: support files
@@ -92,12 +79,73 @@ module Rubysh
       direction == '<'
     end
 
+    def target_reading?
+      !reading?
+    end
+
     def writing?
       !reading?
     end
 
+    def target_writing?
+      !writing?
+    end
+
     def truncate?
       direction == '>'
+    end
+
+    def named_target?
+      target.kind_of?(Symbol)
+    end
+
+    def target_name
+      raise Rubysh::Error::BaseError.new("Not a named target") unless named_target?
+      named_target?
+    end
+
+    def prepare!(runner)
+      state(runner)[:target_pipe] = Subprocess::PipeWrapper.new
+      prepare_target(runner)
+    end
+
+    def prepare_target(runner)
+      return unless named_target?
+      targets = runner.targets
+      if targets.include?(name)
+        raise Rubysh::Error::BaseError.new("#{runner} already has a named target: #{name.inspect}")
+      end
+
+      targets[name] = {
+        :command => command,
+        :directive => directive,
+        :buffer => []
+      }
+    end
+
+    # E.g. Rubysh.stdin < :stdin
+    def apply_parent!(runner)
+      target_pipe = state(runner)[:target_pipe]
+      return unless target_pipe
+      if target_writing?
+        target_pipe.write_only
+      else
+        target_pipe.read_only
+      end
+    end
+
+    def apply!(runner)
+      Rubysh.log.info("About to apply #{self} for #{$$}")
+
+      # Open the target
+      target_io = file_as_io(target)
+
+      target_fd = Util.to_fileno(target_io)
+      source_fd = Util.to_fileno(source)
+
+      # Copy target -> source
+      dup2(target_fd, source_fd)
+      set_cloexec(source_fd, false)
     end
 
     private
@@ -106,7 +154,7 @@ module Rubysh
     def file_as_io(file, default_to_cloexec=true)
       return file if file.kind_of?(IO)
       # If it's an FD, canonicalize to the FD number
-      file = to_fileno(file)
+      file = Util.to_fileno(file)
 
       if file.kind_of?(Integer)
         io = io_without_autoclose(file)
@@ -136,18 +184,6 @@ module Rubysh
       io
     end
 
-    def file_as_fd(file)
-      to_fileno(file)
-    end
-
-    def to_fileno(file)
-      if file.respond_to?(:fileno)
-        file.fileno
-      else
-        file
-      end
-    end
-
     # Should really just shell out to dup2, but looks like we'd need a
     # C extension to do so. The concurrency story here is a bit off,
     # and this probably doesn't copy over all FD state
@@ -170,6 +206,11 @@ module Rubysh
       file = io_without_autoclose(file) unless file.kind_of?(IO)
       value = enable ? Fcntl::FD_CLOEXEC : 0
       file.fcntl(Fcntl::F_SETFD, value)
+    end
+
+    # TODO: DRY up?
+    def state(runner)
+      runner.state(self)
     end
   end
 end

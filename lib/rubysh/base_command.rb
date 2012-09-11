@@ -2,8 +2,6 @@ module Rubysh
   # TODO:
   #
   # - freeze after initialize?
-  # - ensure run is only called once (maybe provide a clone to run
-  #   again? or switch to factory?)
   class BaseCommand
     def stringify_arg(arg)
       case arg
@@ -22,9 +20,16 @@ module Rubysh
       to_s
     end
 
+    def create_runner
+      Runner.new(self)
+    end
+
     def run
-      run_async
-      wait
+      create_runner.run
+    end
+
+    def run_async
+      create_runner.run_async
     end
 
     def |(other)
@@ -35,11 +40,11 @@ module Rubysh
       raise NotImplementedError.new("Override in subclass")
     end
 
-    def run_async
+    def start_async(runner)
       raise NotImplementedError.new("Override in subclass")
     end
 
-    def wait
+    def wait(runner)
       raise NotImplementedError.new("Override in subclass")
     end
 

@@ -3,40 +3,41 @@ require File.expand_path('../../_lib', File.dirname(__FILE__))
 module RubyshTest::Unit
   class RedirectTest < UnitTest
     describe 'when redirecting 2>&1' do
-      it 'applies by calling stderr.reopen(stdout)' do
-        stdout = mock
-        stderr = mock(:reopen => stdout)
-        IO.expects(:new).with(1).returns(stdout)
-        IO.expects(:new).with(2).returns(stderr)
-        redirect = Rubysh::Redirect.new(2, '>', 1)
-        redirect.apply!
-      end
-
       it 'correctly coerces when called with IO objects' do
-        stdout = mock
-        stderr = mock(:reopen => stdout)
+        runner = mock
+        stdout = stub(:fileno => 1)
+        stderr = stub(:fileno => 2)
 
-        stdout.expects(:kind_of?).with(Integer).returns(false)
-        stdout.expects(:kind_of?).with(IO).returns(true)
-        stderr.expects(:kind_of?).with(String).returns(false)
-        stderr.expects(:kind_of?).with(IO).returns(true)
+        stdout.stubs(:kind_of?).with(Integer).returns(false)
+        stdout.stubs(:kind_of?).with(IO).returns(true)
+        stderr.stubs(:kind_of?).with(String).returns(false)
+        stderr.stubs(:kind_of?).with(IO).returns(true)
 
+        # Due to stubbing
         IO.expects(:new).never
 
         redirect = Rubysh::Redirect.new(stderr, '>', stdout)
-        redirect.apply!
+        redirect.expects(:dup2).once.with(1, 2)
+        redirect.expects(:set_cloexec).once.with(2, false)
+
+        redirect.apply!(runner)
       end
     end
 
     describe 'when redirecting an unopened FD 3>&1' do
-      it 'applies by using fcntl to dupfd' do
-        stdout = mock
-        stdout.expects(:fcntl).with(Fcntl::F_DUPFD, 3).returns(3)
+      it 'applies dup2 as expected' do
+        runner = mock
+        stdout = stub(:fileno => 1)
+
         IO.expects(:new).with(1).returns(stdout)
-        IO.expects(:new).with(3).raises(Errno::EBADF)
+
+        stdout = stub(:fileno => 1)
 
         redirect = Rubysh::Redirect.new(3, '>', 1)
-        redirect.apply!
+        redirect.expects(:dup2).once.with(1, 3)
+        redirect.expects(:set_cloexec).once.with(3, false)
+
+        redirect.apply!(runner)
       end
     end
   end

@@ -13,8 +13,9 @@ module RubyshTest::Unit
 
         it 'creates a command with the expected arguments' do
           command = Rubysh('ls', '/tmp')
-          command.instantiate_subprocess
-          subprocess = command.subprocess
+          runner = Rubysh::Runner.new(command)
+          command.send(:prepare_subprocess, runner)
+          subprocess = runner.state(command)[:subprocess]
           assert_equal('ls', subprocess.command)
           assert_equal(['/tmp'], subprocess.args)
           assert_equal([], subprocess.directives)
@@ -36,13 +37,14 @@ module RubyshTest::Unit
           pipeline = command.pipeline
           assert_equal(2, pipeline.length)
 
+          runner = Rubysh::Runner.new(command)
+
           left, right = pipeline
+          left.send(:prepare_subprocess, runner)
+          right.send(:prepare_subprocess, runner)
 
-          left.instantiate_subprocess
-          right.instantiate_subprocess
-
-          left_subprocess = left.subprocess
-          right_subprocess = right.subprocess
+          left_subprocess = runner.state(left)[:subprocess]
+          right_subprocess = runner.state(right)[:subprocess]
 
           assert_equal([], left_subprocess.directives)
           assert_equal([], right_subprocess.directives)
@@ -59,8 +61,9 @@ module RubyshTest::Unit
 
         it 'creates a command with the expected arguments' do
           command = Rubysh('ls', '/tmp', Rubysh.stderr > Rubysh.stdout)
-          command.instantiate_subprocess
-          subprocess = command.subprocess
+          runner = Rubysh::Runner.new(command)
+          command.send(:prepare_subprocess, runner)
+          subprocess = runner.state(command)[:subprocess]
           assert_equal('ls', subprocess.command)
           assert_equal(['/tmp'], subprocess.args)
           assert_equal([Rubysh::Redirect.new(Rubysh::FD.new(2), '>', Rubysh::FD.new(1))], subprocess.directives)

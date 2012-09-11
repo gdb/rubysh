@@ -9,7 +9,9 @@ require 'rubysh/error'
 require 'rubysh/fd'
 require 'rubysh/pipeline'
 require 'rubysh/redirect'
+require 'rubysh/runner'
 require 'rubysh/subprocess'
+require 'rubysh/util'
 
 # Command:
 #
