@@ -13,7 +13,7 @@ require 'rubysh/subprocess'
 require 'rubysh/triple_less_than'
 require 'rubysh/util'
 
-# Command:
+# Basic usage:
 #
 # Rubysh('ls', '/tmp')
 # => Command: ls /tmp
@@ -24,39 +24,41 @@ require 'rubysh/util'
 # Rubysh('ls', '/tmp', Rubysh.>('/tmp/outfile.txt'))
 # => Command: ls /tmp > /tmp/outfile.txt
 #
-# TODO:
-# => Command: (ls; ls) | grep foo
-# => Command: echo <(ls /tmp)
-# => Command: echo >(cat)
-# something like the following to tee output:
-# Rubysh('cat', Rubysh.stdout >> :pipe)
-#
 # If you want to capture output:
 #
 # Rubysh('cat', Rubysh.stdout > :pipe)
-#
-# Or for interactivity:
-#
-# q = Rubysh('cat', Rubysh.stdout > :stdout, Rubysh.stderr > :stderr, Rubysh.stdin < :stdin)
-# q.write('my whole command')
-# q.communicate # closes writeable pipes and reads from all readable pipes
-# q.data_from(:stdout)
-# q.data_from(1)
-# q.status
 #
 # You can name pipes with whatever symbol name you want:
 #
 # Rubysh('cat', 2 > :stdout, 3 > :fd3)
 #
-# This API is a WIP:
+# TODOs:
 #
-# q.write('my first command') # write data (while also reading from readable pipes
-#                             # in a select() loop)
+# => Command: (ls; ls) | grep foo
+# => Command: echo <(ls /tmp)
+# => Command: echo >(cat)
+#
+# Something like the following to tee output:
+#
+# Rubysh('cat', Rubysh.stdout >> :pipe)
+#
+# The following rough API needs to be fleshed out. Maybe something
+# close to the following for interactivity:
+#
+# cmd = Rubysh('cat', Rubysh.stdout > :stdout, Rubysh.stderr > :stderr, Rubysh.stdin < :stdin)
+# q = cmd.run_async
+# q.write(:stdin, 'my whole command')
+# q.communicate # closes writeable pipes and reads from all readable pipes
+# q.data(:stdout)
+# q.exitstatus
+#
+# q.write(:stdin, 'my first command') # write data (while also reading from readable pipes
+#                                     # in a select() loop)
 # q.communicate(:partial => true) # read available data (don't close pipes)
-# q.data_from(:stdout)
-# q.write('my second command')
+# q.data(:stdout)
+# q.write(:stdin, 'my second command')
 #
-# Not sure this is needed:
+# It'd be possible to support &, but I don't think it's needed:
 # Rubysh('ls', '/tmp', Rubysh.&)
 # => Command: ls /tmp &
 
@@ -77,6 +79,12 @@ def Rubysh(*args, &blk)
   else
     Rubysh::Command.new(args)
   end
+end
+
+def AliasRubysh(name)
+  metaclass = class << self; self; end
+  metaclass.send(:alias_method, name, :Rubysh)
+  Object.const_set(name, Rubysh)
 end
 
 module Rubysh

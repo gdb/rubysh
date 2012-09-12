@@ -73,6 +73,12 @@ it to complete. Alternatively, you can do:
     runner = command.run_async
     runner.wait
 
+If you don't want to type `Rubysh` all the time, you can alias it with
+the `AliasRubysh` helper:
+
+    AliasRubysh(:R)
+    R('ls')
+
 ## Safety
 
 Rubysh takes a splatted array argument as a command specification. In
