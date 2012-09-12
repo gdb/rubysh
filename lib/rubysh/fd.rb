@@ -31,6 +31,10 @@ module Rubysh
       Rubysh.<<(self)
     end
 
+    def inspect
+      to_s
+    end
+
     def to_s
       "FD: #{@fileno}"
     end
