@@ -22,8 +22,9 @@ are simple in __sh__, such as:
   - redirecting a program's output to a file
   - use a pre-tokenized array of arguments
 
-Rubysh tries to emulate __sh__'s interface and semantics as closely as
-possible.
+(Some existing libraries make some of these tasks easy, but not all of
+them at once.) Rubysh tries to emulate __sh__'s interface and
+semantics as closely as possible.
 
 ## Features
 
@@ -64,13 +65,21 @@ quite decided on the right API for this yet.
 
 ## API
 
-The Rubysh helper function produces instances of __BaseCommand__. You
-can run __run__ on these to spawn a subprocess and then __wait__ for
+The Rubysh helper function produces instances of `BaseCommand`. You
+can run `run` on these to spawn a subprocess and then `wait` for
 it to complete. Alternatively, you can do:
 
     command = Rubysh('ls')
     runner = command.run_async
     runner.wait
+
+## Safety
+
+Rubysh takes a splatted array argument as a command specification. In
+particular, it doesn't convert it back and forth a command-line
+string, meaning you don't have to worry about spaces in
+variables. (You should still always think twice before putting
+untrusted arguments into a shell argument.)
 
 ## Installation
 
@@ -86,3 +95,9 @@ Or by installing directly via
 ## Contributing
 
 Patches welcome! I'm happy to merge pull requests.
+
+## Future features
+
+- Support for environment variables
+- Finer-grained IO control
+- Subshell syntax (`cat <(ls)`, `echo $(ls)`)
