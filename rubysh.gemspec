@@ -4,7 +4,7 @@ require File.expand_path('../lib/rubysh/version', __FILE__)
 Gem::Specification.new do |gem|
   gem.authors       = ["Greg Brockman"]
   gem.email         = ["gdb@gregbrockman.com"]
-  gem.description   = "Rubysh: subprocesses made easy"
+  gem.description   = "Rubysh: Ruby subprocesses made easy"
   gem.summary       = "Rubysh makes shelling out easy with a __sh__-like syntax layer for Ruby:
 
     irb -r rubysh
