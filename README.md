@@ -1,29 +1,88 @@
 # Rubysh
 
-TODO: Write a gem description
+Rubysh: subprocesses made easy
+
+Rubysh makes shelling out easy with a __sh__-like syntax layer for Ruby:
+
+    irb -r rubysh
+    >> command = Rubysh('echo', 'hello-from-Rubysh') | Rubysh('grep', '--color', 'Rubysh')
+    >> command.run
+    hello-from-Rubysh
+    => Rubysh::Runner: echo hello-from-Rubysh | grep --color Rubysh (exitstatus: 0)
+
+Rubysh philosophy is to make simple tasks simple and complex tasks
+possible.
+
+## Motivation
+
+Existing Ruby shell libaries make it very difficult to do tasks that
+are simple in __sh__, such as:
+
+  - piping the output from one program to another
+  - redirecting a program's output to a file
+  - use a pre-tokenized array of arguments
+
+Rubysh tries to emulate __sh__'s interface and semantics as closely as
+possible.
+
+## Features
+
+Redirecting a file descriptor to a file:
+
+    # echo hello-from-Rubysh >/tmp/file.txt
+    Rubysh('echo', 'hello-from-Rubysh', Rubysh.stdout > '/tmp/file.txt')
+    Rubysh('echo', 'hello-from-Rubysh', Rubysh::FD(1) > '/tmp/file.txt')
+
+Redirecting a file descriptor to another file descriptor:
+
+    # echo hello-from-Rubysh 2>&1
+    Rubysh('echo', 'hello-from-Rubysh', Rubysh.stderr > Rubysh.stdout)
+
+Feeding standard input with a string literal:
+
+    # cat <<< "hello there"
+    Rubysh('cat', Rubysh.<<< 'hello there')
+
+Rubysh has been written to work with arbitrary file descriptors, so
+you can do the same advanced FD redirection magic you can in __sh__:
+
+    # cat 3<<< "hello there" <&3
+    Rubysh('cat', Rubysh::FD(3).<<< 'hello there', Rubysh.stdin < Rubysh::FD(3))
+
+You can also capture output to a named target (here :stdout, :stderr
+are arbitrary symbols):
+
+    command = Rubysh('echo', 'hi', Rubysh.stdout > :stdout, Rubysh.stderr > :stderr)
+    runner = command.run
+    runner.data(:stdout) # "hi\n"
+    runner.data(:stderr) # ""
+
+Support for controlled input isn't quite ready, but the syntax will be
+similar to the above. I want to support interactivity (so being able
+to write data, read some data, and then write more data), and haven't
+quite decided on the right API for this yet.
+
+## API
+
+The Rubysh helper function produces instances of __BaseCommand__. You
+can run __run__ on these to spawn a subprocess and then __wait__ for
+it to complete. Alternatively, you can do:
+
+    command = Rubysh('ls')
+    runner = command.run_async
+    runner.wait
 
 ## Installation
 
-Add this line to your application's Gemfile:
+Rubysh is hosted on Rubygems. You can install by adding this line to
+your application's Gemfile:
 
     gem 'rubysh'
 
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
+Or by installing directly via
 
     $ gem install rubysh
 
-## Usage
-
-TODO: Write usage instructions here
-
 ## Contributing
 
-1. Fork it
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Added some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create new Pull Request
+Patches welcome! I'm happy to merge pull requests.

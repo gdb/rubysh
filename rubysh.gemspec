@@ -4,8 +4,14 @@ require File.expand_path('../lib/rubysh/version', __FILE__)
 Gem::Specification.new do |gem|
   gem.authors       = ["Greg Brockman"]
   gem.email         = ["gdb@gregbrockman.com"]
-  gem.description   = %q{TODO: Write a gem description}
-  gem.summary       = %q{TODO: Write a gem summary}
+  gem.description   = "Rubysh: subprocesses made easy"
+  gem.summary       = "Rubysh makes shelling out easy with a __sh__-like syntax layer for Ruby:
+
+    irb -r rubysh
+    >> command = Rubysh('echo', 'hello-from-Rubysh') | Rubysh('grep', '--color', 'Rubysh')
+    >> command.run
+    hello-from-Rubysh
+    => Rubysh::Runner: echo hello-from-Rubysh | grep --color Rubysh (exitstatus: 0)"
   gem.homepage      = ""
 
   gem.files         = `git ls-files`.split($\)
