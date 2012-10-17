@@ -74,7 +74,7 @@ class Rubysh::Subprocess
       begin
         ready_readers, ready_writers, _ = IO.select(potential_readers, potential_writers)
       rescue Errno::EINTR
-        next
+        retry
       end
 
       ready_readers.each do |reader|
