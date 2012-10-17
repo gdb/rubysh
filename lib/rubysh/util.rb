@@ -33,8 +33,19 @@ module Rubysh
         copy.close
       end
 
-      res = original.fcntl(Fcntl::F_DUPFD, fildes2)
-      Rubysh.assert(res == fildes2, "Tried to open #{fildes2} but ended up with #{res} instead", true)
+      # For some reason, Ruby 1.9 doesn't seem to let you close
+      # stdout/sterr. So if we didn't manage to close it above, then
+      # just use reopen. We could get rid of the close attempt above,
+      # but I'd rather leave this code as close to doing the same
+      # thing everywhere as possible.
+      begin
+        copy = io_without_autoclose(fildes2)
+      rescue Errno::EBADF
+        res = original.fcntl(Fcntl::F_DUPFD, fildes2)
+        Rubysh.assert(res == fildes2, "Tried to open #{fildes2} but ended up with #{res} instead", true)
+      else
+        copy.reopen(original)
+      end
     end
 
     def self.set_cloexec(file, enable=true)
