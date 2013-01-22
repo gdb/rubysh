@@ -109,11 +109,6 @@ module Rubysh
       self
     end
 
-    def wait
-      run_io
-      do_wait
-    end
-
     def run(input={})
       run_async
       run_io
@@ -192,6 +187,11 @@ module Rubysh
     end
 
     private
+
+    def wait
+      run_io
+      do_wait
+    end
 
     def targets_by_fd_numbers
       @targets.inject({}) do |hash, (_, target_state)|
