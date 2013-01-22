@@ -58,10 +58,18 @@ are arbitrary symbols):
     runner.data(:stdout) # "hi\n"
     runner.data(:stderr) # ""
 
-Support for controlled input isn't quite ready, but the syntax will be
-similar to the above. I want to support interactivity (so being able
-to write data, read some data, and then write more data), and haven't
-quite decided on the right API for this yet.
+## Controlled input
+
+You can easily read and write data interactively:
+
+    >> runner = Rubysh('examples/dots.sh', Rubysh.>).run_async
+    => Rubysh::Runner: examples/dots.sh >:stdout (readers: :stdout, pid: 78296)
+    >> runner.read(:how => :partial) # block until some output available
+    => ".\n.\n.\n.\n.\n.\n.\n.\n.\n"
+    >> runner.read(:how => :nonblock)
+    => ""
+    >> runner.read # block until all output available
+    => [truncated]
 
 ## API
 
