@@ -8,7 +8,7 @@ module Rubysh
         @fd = fd
       end
 
-      def <(literal)
+      def <(literal=:stdin)
         TripleLessThan.new(@fd, literal)
       end
 

@@ -65,8 +65,6 @@ class Rubysh::Subprocess
       end
     end
 
-    private
-
     def run_once
       potential_readers = available_readers
       potential_writers = available_writers
@@ -96,6 +94,8 @@ class Rubysh::Subprocess
         issue_reader_callback(reader, data)
       end
     end
+
+    private
 
     def finalize_reader(reader)
       @finished_readers.add(reader)

@@ -119,7 +119,10 @@ module Rubysh
         :target_reading? => target_reading?,
         :target => target_reading? ? pipe.reader : pipe.writer,
         :complement => target_reading? ? pipe.writer : pipe.reader,
-        :buffer => []
+        :buffer => StringIO.new,
+        :target_name => target_name,
+        :read_pos => 0,
+        :subprocess_fd_number => Util.to_fileno(source)
       }
     end
 

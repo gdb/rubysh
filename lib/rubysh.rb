@@ -118,15 +118,15 @@ module Rubysh
     FD.new(2)
   end
 
-  def self.>(target)
+  def self.>(target=:stdout)
     Redirect.new(1, '>', target)
   end
 
-  def self.>>(target)
+  def self.>>(target=:stdout)
     Redirect.new(1, '>>', target)
   end
 
-  def self.<(target)
+  def self.<(target=:stdin)
     Redirect.new(0, '<', target)
   end
 
