@@ -3,13 +3,6 @@ require 'fcntl'
 require 'timeout'
 require 'thread'
 
-# Using YAML to avoid the JSON dep. open4 uses Marshal to pass around
-# the exception object, but I'm always a bit sketched by Marshal when
-# it's not needed (i.e. don't want the subprocess to have the ability
-# to execute code in the parent, even if it should lose that ability
-# post-exec.)
-require 'yaml'
-
 require 'rubysh/subprocess/parallel_io'
 require 'rubysh/subprocess/pipe_wrapper'
 
@@ -131,7 +124,7 @@ module Rubysh
           # TODO: this may need coercion in Ruby1.9
           'caller' => e.send(:caller)
         }
-        @exec_status.dump_yaml_and_close(msg)
+        @exec_status.dump_json_and_close(msg)
         # Note: atexit handlers will fire in this case. May want to do
         # something about that.
         raise
@@ -139,7 +132,7 @@ module Rubysh
     end
 
     def handle_exec_error
-      msg = @exec_status.load_yaml_and_close
+      msg = @exec_status.load_json_and_close
 
       case msg
       when false

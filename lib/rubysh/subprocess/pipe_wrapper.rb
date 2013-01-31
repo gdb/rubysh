@@ -1,5 +1,17 @@
 class Rubysh::Subprocess
   class PipeWrapper
+    begin
+      require 'json'
+      SERIALIZER = JSON
+    rescue LoadError => e
+      if ENV['RUBYSH_ENABLE_YAML']
+        require 'yaml'
+        SERIALIZER = YAML
+      else
+        raise LoadError.new("Could not import JSON (#{e}). You should either run in an environment with rubygems and JSON, or you can set the RUBYSH_ENABLE_YAML environment variable to allow Rubysh to internally use YAML for communication rather than JSON. This is believed safe, but YAML-parsing of untrusted input is bad, so only do this if you really can't get JSON.")
+      end
+    end
+
     attr_accessor :reader, :writer
 
     def initialize(reader_cloexec=true, writer_cloexec=true)
@@ -36,18 +48,18 @@ class Rubysh::Subprocess
       end
     end
 
-    def dump_yaml_and_close(msg)
+    def dump_json_and_close(msg)
       begin
-        YAML.dump(msg, @writer)
+        SERIALIZER.dump(msg, @writer)
       ensure
         @writer.close
         Rubysh.assert(@reader.closed?, "Reader should already be closed")
       end
     end
 
-    def load_yaml_and_close
+    def load_json_and_close
       begin
-        YAML.load(@reader)
+        SERIALIZER.load(@reader)
       rescue ArgumentError => e
         # e.g. ArgumentError: syntax error on line 0, col 2: `' (could
         # happen if the subprocess was killed while writing a message)
