@@ -109,10 +109,21 @@ module Rubysh
       self
     end
 
-    def run(input={})
+    def run(input={}, &blk)
       run_async
+      blk.call(self) if blk
       run_io
       do_wait
+      self
+    end
+
+    def check_call(&blk)
+      run
+      status = full_status
+      unless status.success?
+        raise Rubysh::Error::BadExitError.new("#{@command} exited with #{rendered_status(status)}")
+      end
+      status
     end
 
     def readers
@@ -146,8 +157,8 @@ module Rubysh
 
       extras << "readers: #{valid_readers}" if valid_readers.length > 0
       extras << "writers: #{valid_writers}" if valid_writers.length > 0
-      if status = exitstatus
-        extras << "exitstatus: #{status}"
+      if status = full_status
+        extras << rendered_status(status)
       elsif mypid = pid
         extras << "pid: #{pid}"
       end
@@ -202,14 +213,14 @@ module Rubysh
     end
 
     def do_wait
-      raise Rubysh::Error::AlreadyRunError.new("You must run parallel io before waiting. (Perhaps you want to use the 'run' method, which takes care of the plumbing for you?)") unless @runner_state == :parallel_io_ran
+      return unless @runner_state == :parallel_io_ran
       @command.wait(self)
       @runner_state = :waited
       self
     end
 
     def run_io
-      raise Rubysh::Error::AlreadyRunError.new("You must start the subprocesses before running parallel io. (Perhaps you want to use the 'run' method, which takes care of the plumbing for you?)") unless @runner_state == :started
+      return unless @runner_state == :started
       @parallel_io.run
       @runner_state = :parallel_io_ran
       self
@@ -243,6 +254,17 @@ module Rubysh
         else
           Rubysh.log.debug("Just wrote #{written.inspect} on #{target_name.inspect}")
         end
+      end
+    end
+
+    def rendered_status(status)
+      if exitstatus = status.exitstatus
+        "exitstatus: #{exitstatus}"
+      elsif termsig = status.termsig
+        name, _ = Signal.list.detect {|name, number| number == termsig}
+        "termsig: #{name} [signal number #{termsig}]"
+      else
+        ''
       end
     end
   end

@@ -26,12 +26,16 @@ module Rubysh
       Runner.new(self)
     end
 
-    def run
-      create_runner.run
+    def run(&blk)
+      create_runner.run(&blk)
     end
 
-    def run_async
-      create_runner.run_async
+    def run_async(&blk)
+      create_runner.run_async(&blk)
+    end
+
+    def check_call(&blk)
+      create_runner.check_call(&blk)
     end
 
     def |(other)
