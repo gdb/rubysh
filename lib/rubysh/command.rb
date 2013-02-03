@@ -2,11 +2,11 @@ module Rubysh
   class Command < BaseCommand
     attr_accessor :raw_args, :directives, :args
 
-    def initialize(args, opts={})
+    def initialize(args)
       @raw_args = args
       @directives = []
       @args = nil
-      @opts = opts
+      @opts = {}
 
       process_args
     end
@@ -18,6 +18,9 @@ module Rubysh
           raise NotImplementedError.new('Not ready for subshells yet')
         when BaseDirective
           @directives << arg
+          nil
+        when Hash
+          @opts.merge!(arg)
           nil
         else
           arg.to_s

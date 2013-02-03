@@ -9,6 +9,8 @@ module Rubysh
       case arg
       when BaseCommand, BaseDirective
         arg.stringify
+      when Hash
+        arg.inspect
       else
         Shellwords.shellescape(arg.to_s)
       end

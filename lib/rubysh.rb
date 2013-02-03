@@ -90,7 +90,7 @@ end
 module Rubysh
   # Convenience methods
   def self.run(*args, &blk)
-    command = Rubysh::Command.new(*args)
+    command = Rubysh::Command.new(args)
     command.run(&blk)
   end
 
