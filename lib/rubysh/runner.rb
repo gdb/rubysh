@@ -100,6 +100,11 @@ module Rubysh
       end
     end
 
+    def exec_error
+      subprocess = state(@command)[:subprocess]
+      subprocess.exec_error
+    end
+
     # API for running/waiting
     def run_async
       raise Rubysh::Error::AlreadyRunError.new("You have already run this #{self.class} instance. Cannot run again. You can run its command directly though, which will create a fresh #{self.class} instance.") unless @runner_state == :initialized
