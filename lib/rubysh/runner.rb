@@ -129,6 +129,7 @@ module Rubysh
         raise Rubysh::Error::BadExitError.new("#{@command} exited with #{rendered_status(status)}")
       end
       status
+      self
     end
 
     def readers
