@@ -2,10 +2,11 @@ module Rubysh
   class Command < BaseCommand
     attr_accessor :raw_args, :directives, :args
 
-    def initialize(args)
+    def initialize(args, opts={})
       @raw_args = args
       @directives = []
       @args = nil
+      @opts = opts
 
       process_args
     end
@@ -87,6 +88,14 @@ module Rubysh
       state(runner)[:extra_directives] ||= []
     end
 
+    def base_post_forks
+      post_forks = []
+      if cwd = @opts[:cwd]
+        post_forks << Proc.new {Dir.chdir(cwd)}
+      end
+      post_forks
+    end
+
     def extra_post_forks(runner)
       state(runner)[:extra_post_forks] ||= []
     end
@@ -95,7 +104,7 @@ module Rubysh
       # extras first because they are currently only used for
       # pipeline, which should not win out over internal redirects.
       directives = extra_directives(runner) + @directives
-      post_forks = extra_post_forks(runner)
+      post_forks = base_post_forks + extra_post_forks(runner)
       state(runner)[:subprocess] = Subprocess.new(args, directives, post_forks, runner)
     end
   end

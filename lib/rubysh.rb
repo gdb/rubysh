@@ -89,13 +89,13 @@ end
 
 module Rubysh
   # Convenience methods
-  def self.run(command, &blk)
-    command = Rubysh::Command.new(command) unless command.kind_of?(Rubysh::Command)
+  def self.run(*args, &blk)
+    command = Rubysh::Command.new(*args)
     command.run(&blk)
   end
 
-  def self.check_call(command, &blk)
-    command = Rubysh::Command.new(command) unless command.kind_of?(Rubysh::Command)
+  def self.check_call(*args, &blk)
+    command = Rubysh::Command.new(*args)
     command.check_call(&blk)
   end
 
