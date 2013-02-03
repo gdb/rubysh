@@ -49,8 +49,9 @@ class Rubysh::Subprocess
     end
 
     def dump_json_and_close(msg)
+      dumped = SERIALIZER.dump(msg)
       begin
-        SERIALIZER.dump(msg, @writer)
+        @writer.write(dumped)
       ensure
         @writer.close
         Rubysh.assert(@reader.closed?, "Reader should already be closed")
@@ -58,8 +59,11 @@ class Rubysh::Subprocess
     end
 
     def load_json_and_close
+      contents = @reader.read
+      return false if contents.length == 0
+
       begin
-        SERIALIZER.load(@reader)
+        SERIALIZER.load(contents)
       rescue ArgumentError => e
         # e.g. ArgumentError: syntax error on line 0, col 2: `' (could
         # happen if the subprocess was killed while writing a message)
