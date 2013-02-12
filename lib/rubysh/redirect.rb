@@ -1,3 +1,5 @@
+require 'stringio'
+
 module Rubysh
   # Note that in bash, the semantics of redirection appear to be
   # following (tested empirically, rather than reading a spec):
