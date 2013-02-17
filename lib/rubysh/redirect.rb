@@ -15,7 +15,7 @@ module Rubysh
 
     attr_accessor :source, :direction, :target
 
-    def initialize(source, direction, target)
+    def initialize(source, direction, target, opts={})
       unless VALID_DIRECTIONS.include?(direction)
         raise Rubysh::Error::BaseError.new("Direction must be one of #{VALID_DIRECTIONS.join(', ')}, not #{direction.inspect}")
       end
@@ -31,6 +31,7 @@ module Rubysh
       @source = source
       @target = target
       @direction = direction
+      @opts = opts
     end
 
     def printable_source
@@ -124,7 +125,8 @@ module Rubysh
         :buffer => StringIO.new,
         :target_name => target_name,
         :read_pos => 0,
-        :subprocess_fd_number => Util.to_fileno(source)
+        :subprocess_fd_number => Util.to_fileno(source),
+        :tee => @opts[:tee]
       }
     end
 

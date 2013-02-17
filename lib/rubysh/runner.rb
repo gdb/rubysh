@@ -248,6 +248,9 @@ module Rubysh
           buffer.close_write
         else
           Rubysh.log.debug("Just read #{data.inspect} on #{target_name.inspect}")
+          tee = state[:tee]
+          tee.write(data) if tee
+
           # Seek to end
           buffer.pos = buffer.length
           buffer.write(data)

@@ -123,22 +123,47 @@ module Rubysh
     FD.new(2)
   end
 
-  def self.>(target=:stdout)
-    Redirect.new(1, '>', target)
+  def self.>(target=nil, opts=nil)
+    # Might want to DRY this logic up at some point. Right now seems
+    # like it'd just sacrifice clarity though.
+    if !opts && target.kind_of?(Hash)
+      opts = target
+      target = nil
+    end
+    target = :stdout
+
+    Redirect.new(1, '>', target, opts)
   end
 
-  def self.>>(target=:stdout)
-    Redirect.new(1, '>>', target)
+  def self.>>(target=nil, opts=nil)
+    if !opts && target.kind_of?(Hash)
+      opts = target
+      target = nil
+    end
+    target = :stdout
+
+    Redirect.new(1, '>>', target, opts)
   end
 
-  def self.<(target=:stdin)
-    Redirect.new(0, '<', target)
+  def self.<(target=nil, opts=nil)
+    if !opts && target.kind_of?(Hash)
+      opts = target
+      target = nil
+    end
+    target = :stdin
+
+    Redirect.new(0, '<', target, opts)
   end
 
   # Hack to implement <<<
-  def self.<<(fd=nil)
+  def self.<<(fd=nil, opts=nil)
+    if !opts && fd.kind_of?(Hash)
+      opts = fd
+      fd = nil
+    end
+
     fd ||= FD.new(0)
-    TripleLessThan::Shell.new(fd)
+    TripleLessThan::Shell.new(fd, opts)
   end
 
   # Internal utility methods
