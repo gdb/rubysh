@@ -3,6 +3,8 @@ require 'tempfile'
 module Rubysh
   # Looks like bash always buffers <<< to disk
   class TripleLessThan < BaseDirective
+    attr_reader :fd, :literal
+
     class Shell < BaseDirective
       def initialize(fd, opts)
         @fd = fd
