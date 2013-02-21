@@ -4,8 +4,9 @@ module Rubysh
   # Looks like bash always buffers <<< to disk
   class TripleLessThan < BaseDirective
     class Shell < BaseDirective
-      def initialize(fd)
+      def initialize(fd, opts)
         @fd = fd
+        @opts = opts
       end
 
       def <(literal=:stdin)
