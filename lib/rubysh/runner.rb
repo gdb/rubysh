@@ -219,7 +219,11 @@ module Rubysh
     end
 
     def subprocesses
-      @state.values.map {|target| target[:subprocess]}
+      # Not everything with state has a subprocess
+      @state.map do |object, target|
+        next unless object.kind_of?(BaseCommand)
+        target.fetch(:subprocess)
+      end.compact
     end
 
     def do_wait
