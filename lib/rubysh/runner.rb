@@ -219,7 +219,6 @@ module Rubysh
     end
 
     def subprocesses
-
       @state.values.map {|target| target[:subprocess]}
     end
 
