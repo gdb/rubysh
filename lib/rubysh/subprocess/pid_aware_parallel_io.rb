@@ -6,7 +6,7 @@ class Rubysh::Subprocess
   # since it may have forked and a child inherited the parent's
   # fds. (This happens, for example, when using SSH's ControlPersist.)
   #
-  # E.g. try Rubysh.run('bad.rb', Rubysh.>) with:
+  # E.g. try Rubysh.run('ruby', 'bad.rb', Rubysh.>) with:
   #   # cat bad.rb
   #   fork {sleep 1000}
   class PidAwareParallelIO < ParallelIO
