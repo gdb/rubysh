@@ -18,6 +18,10 @@ class Rubysh::Subprocess
       @pids_mutex.synchronize do
         register_sigchld_handler if @parallel_ios.length == 0
         @parallel_ios[parallel_io] = breaker_writer
+
+        # This is needed in case the SIGCHLD is handled before the
+        # writer is stored.
+        trigger_breaker(breaker_writer)
       end
     end
 
@@ -33,11 +37,13 @@ class Rubysh::Subprocess
       # threads. Break loop on all currently active selectors. This
       # could in theory cause a thundering herd, but it's probably not
       # worth the work to defend against.
-      @parallel_ios.values.each do |writer|
-        begin
-          writer.write_nonblock('a')
-        rescue Errno::EAGAIN
-        end
+      @parallel_ios.values.each {|writer| trigger_breaker(writer)}
+    end
+
+    def self.trigger_breaker(writer)
+      begin
+        writer.write_nonblock('a')
+      rescue Errno::EAGAIN
       end
     end
 
