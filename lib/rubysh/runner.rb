@@ -108,8 +108,8 @@ module Rubysh
     # API for running/waiting
     def run_async
       raise Rubysh::Error::AlreadyRunError.new("You have already run this #{self.class} instance. Cannot run again. You can run its command directly though, which will create a fresh #{self.class} instance.") unless @runner_state == :initialized
-      prepare_io
       @command.start_async(self)
+      prepare_io
       @runner_state = :started
       self
     end
@@ -218,6 +218,11 @@ module Rubysh
       end
     end
 
+    def subprocesses
+
+      @state.values.map {|target| target[:subprocess]}
+    end
+
     def do_wait
       return unless @runner_state == :parallel_io_ran
       @command.wait(self)
@@ -239,7 +244,7 @@ module Rubysh
     # Can't build this in the prepare stage because pipes aren't built
     # there.
     def prepare_io
-      @parallel_io = Subprocess::ParallelIO.new(readers, writers)
+      @parallel_io = Subprocess::PidAwareParallelIO.new(readers, writers, subprocesses)
       @parallel_io.on_read do |target_name, data|
         state = @targets[target_name]
         buffer = state[:buffer]

@@ -4,6 +4,7 @@ require 'timeout'
 require 'thread'
 
 require 'rubysh/subprocess/parallel_io'
+require 'rubysh/subprocess/pid_aware_parallel_io'
 require 'rubysh/subprocess/pipe_wrapper'
 
 module Rubysh

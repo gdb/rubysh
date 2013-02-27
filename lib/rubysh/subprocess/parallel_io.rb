@@ -1,6 +1,7 @@
 class Rubysh::Subprocess
   class ParallelIO
     module EOF; end
+    class NothingAvailable < StandardError; end
 
     # readers/writers should be hashes mapping {fd => name}
     def initialize(readers, writers)
@@ -65,15 +66,24 @@ class Rubysh::Subprocess
       end
     end
 
-    def run_once
+    # This method is a stub so it can be extended in subclasses
+    def run_once(timeout=nil)
+      run_select_loop(timeout)
+    end
+
+    def run_select_loop(timeout)
       potential_readers = available_readers
       potential_writers = available_writers
 
       begin
-        ready_readers, ready_writers, _ = IO.select(potential_readers, potential_writers)
+        selected = IO.select(potential_readers, potential_writers, nil, timeout)
       rescue Errno::EINTR
         retry
+      else
+        raise NothingAvailable unless selected
       end
+
+      ready_readers, ready_writers, _ = selected
 
       ready_readers.each do |reader|
         read_available(reader)
@@ -81,6 +91,13 @@ class Rubysh::Subprocess
 
       ready_writers.each do |writer|
         write_available(writer)
+      end
+    end
+
+    def consume_all_available
+      begin
+        loop {run_select_loop(0)}
+      rescue NothingAvailable
       end
     end
 
@@ -106,7 +123,7 @@ class Rubysh::Subprocess
     def issue_reader_callback(reader, data)
       if @on_read
         name = reader_name(reader)
-        @on_read.call(name, data)
+        @on_read.call(name, data) if name
       end
     end
 
@@ -168,7 +185,7 @@ class Rubysh::Subprocess
     def issue_writer_callback(writer, data, remaining)
       if @on_write
         name = writer_name(writer)
-        @on_write.call(name, data, remaining)
+        @on_write.call(name, data, remaining) if name
       end
     end
 
