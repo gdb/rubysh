@@ -10,21 +10,21 @@ class Rubysh::Subprocess
   #   # cat bad.rb
   #   fork {sleep 1000}
   class PidAwareParallelIO < ParallelIO
-    @@pids_mutex = Mutex.new
-    @@parallel_ios = {}
-    @@old_sigchld_handler = nil
+    @pids_mutex = Mutex.new
+    @parallel_ios = {}
+    @old_sigchld_handler = nil
 
     def self.register_parallel_io(parallel_io, breaker_writer)
-      @@pids_mutex.synchronize do
-        register_sigchld_handler if @@parallel_ios.length == 0
-        @@parallel_ios[parallel_io] = breaker_writer
+      @pids_mutex.synchronize do
+        register_sigchld_handler if @parallel_ios.length == 0
+        @parallel_ios[parallel_io] = breaker_writer
       end
     end
 
     def self.deregister_parallel_io(parallel_io)
-      @@pids_mutex.synchronize do
-        @@parallel_ios.delete(parallel_io)
-        deregister_sigchld_handler if @@parallel_ios.length == 0
+      @pids_mutex.synchronize do
+        @parallel_ios.delete(parallel_io)
+        deregister_sigchld_handler if @parallel_ios.length == 0
       end
     end
 
@@ -33,7 +33,7 @@ class Rubysh::Subprocess
       # threads. Break loop on all currently active selectors. This
       # could in theory cause a thundering herd, but it's probably not
       # worth the work to defend against.
-      @@parallel_ios.values.each do |writer|
+      @parallel_ios.values.each do |writer|
         begin
           writer.write_nonblock('a')
         rescue Errno::EAGAIN
@@ -42,11 +42,11 @@ class Rubysh::Subprocess
     end
 
     def self.register_sigchld_handler
-      @@old_sigchld_handler = Signal.trap("CHLD") {handle_sigchld}
+      @old_sigchld_handler = Signal.trap("CHLD") {handle_sigchld}
     end
 
     def self.deregister_sigchld_handler
-      Signal.trap("CHLD", @@old_sigchld_handler)
+      Signal.trap("CHLD", @old_sigchld_handler)
     end
 
     # readers/writers should be hashes mapping {fd => name}
