@@ -17,5 +17,6 @@ module Rubysh
     class AlreadyClosedError < BaseError; end
     class AlreadyRunError < BaseError; end
     class BadExitError < BaseError; end
+    class ECHILDError < BaseError; end
   end
 end

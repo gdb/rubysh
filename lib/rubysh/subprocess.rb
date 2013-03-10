@@ -74,7 +74,13 @@ module Rubysh
 
     def do_wait(nonblock=false)
       flags = nonblock ? Process::WNOHANG : nil
-      return nil unless result = Process.waitpid2(@pid, flags)
+      begin
+        result = Process.waitpid2(@pid, flags)
+      rescue Errno::ECHILD => e
+        raise Rubysh::Error::ECHILDError.new("No unreaped process #{@pid}. This could indicate a bug in Rubysh, but more likely means you have something in your codebase which is wait(2)ing on subprocesses.")
+      end
+
+      return unless result
 
       pid, @status = result
       Rubysh.assert(pid == @pid,
