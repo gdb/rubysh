@@ -48,7 +48,10 @@ class Rubysh::Subprocess
     end
 
     def self.register_sigchld_handler
-      @old_sigchld_handler = Signal.trap("CHLD") {handle_sigchld}
+      @old_sigchld_handler = Signal.trap('CHLD') {handle_sigchld}
+      # MRI returns nil for a DEFAULT handler, but it also treats nil
+      # as IGNORE.
+      @old_sigchld_handler ||= 'DEFAULT'
     end
 
     def self.deregister_sigchld_handler
