@@ -55,7 +55,7 @@ class Rubysh::Subprocess
     end
 
     def self.deregister_sigchld_handler
-      Signal.trap("CHLD", @old_sigchld_handler)
+      Signal.trap('CHLD', @old_sigchld_handler)
     end
 
     # readers/writers should be hashes mapping {fd => name}
