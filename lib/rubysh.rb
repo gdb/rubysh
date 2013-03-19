@@ -100,7 +100,7 @@ module Rubysh
   end
 
   def self.check_call(*args, &blk)
-    command = Rubysh::Command.new(*args)
+    command = Rubysh::Command.new(args)
     command.check_call(&blk)
   end
 
