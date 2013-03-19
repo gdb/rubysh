@@ -94,6 +94,11 @@ module Rubysh
     command.run(&blk)
   end
 
+  def self.run_async(*args, &blk)
+    command = Rubysh::Command.new(args)
+    command.run_async(&blk)
+  end
+
   def self.check_call(*args, &blk)
     command = Rubysh::Command.new(*args)
     command.check_call(&blk)
