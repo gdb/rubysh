@@ -135,7 +135,7 @@ module Rubysh
       opts = target
       target = nil
     end
-    target = :stdout
+    target ||= :stdout
 
     Redirect.new(1, '>', target, opts)
   end
@@ -145,7 +145,7 @@ module Rubysh
       opts = target
       target = nil
     end
-    target = :stdout
+    target ||= :stdout
 
     Redirect.new(1, '>>', target, opts)
   end
@@ -155,7 +155,7 @@ module Rubysh
       opts = target
       target = nil
     end
-    target = :stdin
+    target ||= :stdin
 
     Redirect.new(0, '<', target, opts)
   end
