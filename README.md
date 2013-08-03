@@ -55,8 +55,8 @@ are arbitrary symbols):
 
     command = Rubysh('echo', 'hi', Rubysh.stdout > :stdout, Rubysh.stderr > :stderr)
     runner = command.run
-    runner.data(:stdout) # "hi\n"
-    runner.data(:stderr) # ""
+    runner.read(:stdout) # "hi\n"
+    runner.read(:stderr) # ""
 
 ## Controlled input
 
