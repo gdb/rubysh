@@ -8,7 +8,7 @@ module RubyshTest::Functional
         result = cmd.run
 
         assert_equal(0, result.exitstatus)
-        output = result.data(:stdout)
+        output = result.read(:stdout)
         assert_equal('test', output)
       end
     end
