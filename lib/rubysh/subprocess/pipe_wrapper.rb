@@ -50,12 +50,10 @@ class Rubysh::Subprocess
 
     def dump_json_and_close(msg)
       dumped = SERIALIZER.dump(msg)
-      begin
-        @writer.write(dumped)
-      ensure
-        @writer.close
-        Rubysh.assert(@reader.closed?, "Reader should already be closed")
-      end
+      @writer.write(dumped)
+    ensure
+      @writer.close
+      Rubysh.assert(@reader.closed?, "Reader should already be closed")
     end
 
     def load_json_and_close
@@ -68,10 +66,10 @@ class Rubysh::Subprocess
         # e.g. ArgumentError: syntax error on line 0, col 2: `' (could
         # happen if the subprocess was killed while writing a message)
         raise Rubysh::Error::BaseError.new("Invalid message read from pipe: #{e}")
-      ensure
-        @reader.close
-        Rubysh.assert(@writer.closed?, "Writer should already be closed")
       end
+    ensure
+      @reader.close
+      Rubysh.assert(@writer.closed?, "Writer should already be closed")
     end
   end
 end
