@@ -101,7 +101,7 @@ module Rubysh
       if env = @opts[:env]
         post_forks << Proc.new do
           ENV.clear
-          ENV.merge!(env)
+          ENV.update(env)
         end
       end
 
