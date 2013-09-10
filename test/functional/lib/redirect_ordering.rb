@@ -7,7 +7,7 @@ module RubyshTest::Functional
         cmd = Rubysh('echo', 'whoops!', Rubysh.stdout > '/dev/null') | Rubysh('cat', Rubysh.stdout > :stdout)
         result = cmd.run
 
-        output = result.data(:stdout)
+        output = result.read(:stdout)
         assert_equal('', output)
       end
     end
