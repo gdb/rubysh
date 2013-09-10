@@ -93,9 +93,18 @@ module Rubysh
 
     def base_post_forks
       post_forks = []
+
       if cwd = @opts[:cwd]
         post_forks << Proc.new {Dir.chdir(cwd)}
       end
+
+      if env = @opts[:env]
+        post_forks << Proc.new do
+          ENV.clear
+          ENV.merge!(env)
+        end
+      end
+
       post_forks
     end
 
