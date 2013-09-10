@@ -22,7 +22,7 @@ Gem::Specification.new do |gem|
   gem.version       = Rubysh::VERSION
 
   gem.add_development_dependency 'rake'
+  gem.add_development_dependency 'minitest'
   gem.add_development_dependency 'mocha'
   gem.add_development_dependency 'chalk-rake'
-  gem.add_development_dependency 'minitest', '3.1.0'
 end
