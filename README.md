@@ -112,6 +112,5 @@ Patches welcome! I'm happy to merge pull requests.
 
 ## Future features
 
-- Support for environment variables
-- Finer-grained IO control
+- Better support for streaming output
 - Subshell syntax (`cat <(ls)`, `echo $(ls)`)
