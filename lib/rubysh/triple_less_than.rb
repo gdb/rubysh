@@ -47,7 +47,7 @@ module Rubysh
     def stringify
       fd = Util.to_fileno(@fd)
       beginning = fd == 0 ? '' : fd.to_s
-      "#{beginning}<<< #{@literal.inspect}"
+      "#{beginning}<<< (#{@literal.bytesize} bytes)"
     end
 
     def to_s
