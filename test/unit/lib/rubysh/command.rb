@@ -16,5 +16,15 @@ module RubyshTest::Unit
         assert_equal('Command: ls /tmp 2>&1 /foo', command.to_s)
       end
     end
+
+    describe 'when calling #run_async' do
+      it 'raises the expected error when duplicating a named target' do
+        cmd = Rubysh::Command.new(['ls', '/tmp', Rubysh.>, Rubysh.>])
+        error = assert_raises(Rubysh::Error::BaseError) do
+          cmd.run_async
+        end
+        assert_match(/already has a named target/, error.message)
+      end
+    end
   end
 end

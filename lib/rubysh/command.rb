@@ -53,11 +53,11 @@ module Rubysh
     end
 
     def status(runner)
-      state(runner)[:subprocess].status
+      (subprocess = state(runner)[:subprocess]) ? subprocess.status : nil
     end
 
     def pid(runner)
-      state(runner)[:subprocess].pid
+      (subprocess = state(runner)[:subprocess]) ? subprocess.pid : nil
     end
 
     def prepare!(runner)
