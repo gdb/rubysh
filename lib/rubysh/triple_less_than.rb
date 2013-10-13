@@ -32,16 +32,19 @@ module Rubysh
 
     def prepare!(runner)
       tempfile = Tempfile.new('buffer')
+      tempfile_read_only = File.open(tempfile.path, 'r')
+
       tempfile.delete
       tempfile.write(@literal)
       tempfile.flush
       tempfile.rewind
+      tempfile.close
 
-      Util.set_cloexec(tempfile)
+      Util.set_cloexec(tempfile_read_only)
 
       state = state(runner)
-      state[:tempfile] = tempfile
-      state[:redirect] = Redirect.new(@fd, '<', tempfile)
+      state[:tempfile] = tempfile_read_only
+      state[:redirect] = Redirect.new(@fd, '<', tempfile_read_only)
     end
 
     def stringify
