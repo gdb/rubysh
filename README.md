@@ -92,7 +92,7 @@ the `AliasRubysh` helper:
 Rubysh takes a splatted array argument as a command specification. In
 particular, it doesn't convert it back and forth a command-line
 string, meaning you don't have to worry about spaces in
-variables. (You should still always think twice before putting
+arguments. (You should still always think twice before putting
 untrusted arguments into a shell argument.)
 
 ## Installation
