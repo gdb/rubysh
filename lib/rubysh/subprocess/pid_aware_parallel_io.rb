@@ -58,10 +58,13 @@ class Rubysh::Subprocess
       Signal.trap('CHLD', @old_sigchld_handler)
     end
 
+    attr_reader :finalized
+
     # readers/writers should be hashes mapping {fd => name}
     def initialize(readers, writers, subprocesses)
       @breaker_reader, @breaker_writer = IO.pipe
       @subprocesses = subprocesses
+      @finalized = false
 
       readers = readers.dup
       readers[@breaker_reader] = nil
@@ -75,6 +78,8 @@ class Rubysh::Subprocess
     end
 
     def run_once(timeout=nil)
+      return if @finalized
+
       @subprocesses.each do |subprocess|
         subprocess.wait(true)
       end
@@ -98,6 +103,8 @@ class Rubysh::Subprocess
       available_readers.each {|reader| reader.close}
       available_writers.each {|writer| writer.close}
       self.class.deregister_parallel_io(self)
+
+      @finalized = true
     end
   end
 end

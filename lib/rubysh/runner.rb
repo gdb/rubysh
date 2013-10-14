@@ -56,9 +56,15 @@ module Rubysh
       case how = opts[:how]
       when :partial
         # Read until we get some bytes
-        @parallel_io.run_once until state[:buffer].length != state[:read_pos]
+        while state[:buffer].length == state[:read_pos]
+          # If everything's exited, just return nil
+          return nil if @parallel_io.finalized
+          @parallel_io.run_once
+        end
       when :nonblock
         @parallel_io.read_available(state[:target])
+        # Return nil unless we have something new
+        return nil if state[:buffer].length == state[:read_pos]
       when nil
         communicate if @runner_state == :started
       else
