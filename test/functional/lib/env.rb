@@ -1,7 +1,7 @@
 require File.expand_path('../_lib', File.dirname(__FILE__))
 
 module RubyshTest::Functional
-  class TripleLessThanTest < FunctionalTest
+  class EnvTest < FunctionalTest
     describe 'when using <<< string' do
       it 'the string is delivered on stdin' do
         ENV['TEST1'] = '1'

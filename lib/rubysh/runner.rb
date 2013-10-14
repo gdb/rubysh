@@ -203,12 +203,21 @@ module Rubysh
       target_state
     end
 
-    private
+    def kill(signal='TERM')
+      my_pid = pid
+      unless my_pid
+        raise Rubysh::Error::BaseError.new("You haven't started this runner yet.")
+      end
+      Rubysh.log.debug("Sending #{signal} to #{my_pid}")
+      Process.kill(signal, my_pid)
+    end
 
     def wait
       run_io
       do_wait
     end
+
+    private
 
     def targets_by_fd_numbers
       @targets.inject({}) do |hash, (_, target_state)|
