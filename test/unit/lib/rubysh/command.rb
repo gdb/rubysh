@@ -15,6 +15,10 @@ module RubyshTest::Unit
         command = Rubysh::Command.new(['ls', '/tmp', directive, '/foo'])
         assert_equal('Command: ls /tmp 2>&1 /foo', command.to_s)
       end
+
+      it 'raises an error when given an unsplatted array' do
+        assert_raises(RuntimeError) {Rubysh::Command.new([['ls', 'stuff']])}
+      end
     end
 
     describe 'when calling #run_async' do

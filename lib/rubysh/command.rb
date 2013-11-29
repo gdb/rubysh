@@ -3,6 +3,10 @@ module Rubysh
     attr_accessor :raw_args, :directives, :args
 
     def initialize(args)
+      if args.length == 1 && args[0].kind_of?(Array)
+        raise "It looks like you created a Rubysh::Command with a singleton nested array: #{args.inspect}. That'll never be runnable, and probably indicates you forgot a splat somewhere."
+      end
+
       @raw_args = args
       @directives = []
       @args = nil
