@@ -26,6 +26,8 @@ module Rubysh
         when Hash
           @opts.merge!(arg)
           nil
+        when nil
+          nil
         else
           arg.to_s
         end
