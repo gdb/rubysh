@@ -10,12 +10,18 @@ module Rubysh
       end
     end
 
-    # Leaks memory (needed to avoid Ruby 1.8's IO autoclose behavior),
-    # and so you should only use it right before execing.
+    # Leaks memory in 1.8 (needed to avoid Ruby 1.8's IO autoclose
+    # behavior), and so you should only use it in pre-1.9 right before
+    # execing.
     def self.io_without_autoclose(fd_num)
       fd_num = to_fileno(fd_num)
       io = IO.new(fd_num)
-      hold(io)
+
+      if io.respond_to?(:autoclose)
+        io.autoclose = false
+      else
+        hold(io)
+      end
       io
     end
 
