@@ -149,6 +149,8 @@ module Rubysh
       else
         @exec_error = Rubysh::Error::BaseError.new("Invalid message received over the exec_status pipe: #{msg.inspect}")
       end
+
+      raise @exec_error if @exec_error
     end
   end
 end
