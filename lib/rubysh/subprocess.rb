@@ -134,7 +134,7 @@ module Rubysh
         @exec_status.dump_json_and_close(msg)
         # Note: atexit handlers will fire in this case. May want to do
         # something about that.
-        raise
+        exit(1)
       end
     end
 
