@@ -3,7 +3,7 @@ require 'bundler/setup'
 
 require 'minitest/autorun'
 require 'minitest/spec'
-require 'mocha'
+require 'mocha/setup'
 
 $:.unshift(File.expand_path('../lib', File.dirname(__FILE__)))
 

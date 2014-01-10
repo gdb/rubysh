@@ -5,6 +5,10 @@ module Rubysh
   #
   # - freeze after initialize?
   class BaseCommand
+    def opts
+      @opts || {}
+    end
+
     def stringify_arg(arg)
       case arg
       when BaseCommand, BaseDirective

@@ -36,6 +36,7 @@ module Rubysh
     # read(:how => :nonblock): Return whatever is immediately available
     def read(target=nil, opts=nil)
       raise Rubysh::Error::AlreadyRunError.new("Can only read from a runner in runner_state :started or :waited, not #{@runner_state.inspect}") unless @runner_state == :started || @runner_state == :waited
+      raise Rubysh::Error::BaseError.new("Can't read from a runner where :on_read has been provided") if command.opts[:on_read]
 
       if target.kind_of?(Hash)
         opts = target
@@ -263,28 +264,36 @@ module Rubysh
     # there.
     def prepare_io
       @parallel_io = Subprocess::PidAwareParallelIO.new(readers, writers, subprocesses)
-      @parallel_io.on_read do |target_name, data|
-        state = @targets[target_name]
-        buffer = state[:buffer]
-        if data == Subprocess::ParallelIO::EOF
-          Rubysh.log.debug("EOF reached on #{target_name.inspect}")
-          buffer.close_write
-        else
-          Rubysh.log.debug("Just read #{data.inspect} on #{target_name.inspect}")
-          tee = state[:tee]
-          tee.write(data) if tee
+      if on_read = command.opts[:on_read]
+        @parallel_io.on_read(on_read)
+      else
+        @parallel_io.on_read do |target_name, data|
+          state = @targets[target_name]
+          buffer = state[:buffer]
+          if data == Subprocess::ParallelIO::EOF
+            Rubysh.log.debug("EOF reached on #{target_name.inspect}")
+            buffer.close_write
+          else
+            Rubysh.log.debug("Just read #{data.inspect} on #{target_name.inspect}")
+            tee = state[:tee]
+            tee.write(data) if tee
 
-          # Seek to end
-          buffer.pos = buffer.length
-          buffer.write(data)
+            # Seek to end
+            buffer.pos = buffer.length
+            buffer.write(data)
+          end
         end
       end
 
-      @parallel_io.on_write do |target_name, written, remaining|
-        if data == Subprocess::ParallelIO::EOF
-          Rubysh.log.debug("EOF reached on #{target_name.inspect}")
-        else
-          Rubysh.log.debug("Just wrote #{written.inspect} on #{target_name.inspect}")
+      if on_write = command.opts[:on_write]
+        @parallel_io.on_write(on_write)
+      else
+        @parallel_io.on_write do |target_name, written, remaining|
+          if data == Subprocess::ParallelIO::EOF
+            Rubysh.log.debug("EOF reached on #{target_name.inspect}")
+          else
+            Rubysh.log.debug("Just wrote #{written.inspect} on #{target_name.inspect}")
+          end
         end
       end
     end

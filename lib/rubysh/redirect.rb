@@ -126,7 +126,9 @@ module Rubysh
         :target_name => target_name,
         :read_pos => 0,
         :subprocess_fd_number => Util.to_fileno(source),
-        :tee => @opts[:tee]
+        :tee => @opts[:tee],
+        :on_read => @opts[:on_read],
+        :on_write => @opts[:on_write],
       }
     end
 

@@ -123,7 +123,6 @@ module Rubysh
     def exec_program
       begin
         Kernel.exec([command, command], *args)
-        raise Rubysh::Error::UnreachableError.new("This code should be unreachable. If you are seeing this exception, it means someone overrode Kernel.exec. That's not very nice of them.")
       rescue Exception => e
         msg = {
           'message' => e.message,
@@ -135,6 +134,8 @@ module Rubysh
         # Note: atexit handlers will fire in this case. May want to do
         # something about that.
         exit(1)
+      else
+        raise Rubysh::Error::UnreachableError.new("This code should be unreachable. If you are seeing this exception, it means someone overrode Kernel.exec. That's not very nice of them.")
       end
     end
 

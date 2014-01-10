@@ -15,12 +15,14 @@ class Rubysh::Subprocess
       @writer_buffers = {}
     end
 
-    def on_read(&blk)
-      @on_read = blk
+    def on_read(method=nil, &blk)
+      raise "Can't provide both method and block" if method && blk
+      @on_read = method || blk
     end
 
-    def on_write(&blk)
-      @on_write = blk
+    def on_write(method=nil, &blk)
+      raise "Can't provide both method and block" if method && blk
+      @on_write = method || blk
     end
 
     def write(writer_name, data, close_on_complete=true)
