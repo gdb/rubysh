@@ -43,7 +43,7 @@ class Rubysh::Subprocess
     def self.trigger_breaker(writer)
       begin
         writer.write_nonblock('a') unless writer.closed?
-      rescue Errno::EAGAIN, Errno::EPIPE
+      rescue Errno::EAGAIN, Errno::EPIPE, IOError
       end
     end
 
