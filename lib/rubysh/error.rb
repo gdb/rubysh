@@ -4,10 +4,11 @@ module Rubysh
 
     class ExecError < BaseError
       # Exception klass and caller from the child process
-      attr_accessor :klass, :caller
+      attr_accessor :raw_message, :klass, :caller
 
-      def initialize(message, klass, caller)
+      def initialize(message, raw_message, klass, caller)
         super(message)
+        @raw_message = raw_message
         @klass = klass
         @caller = caller
       end

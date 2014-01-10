@@ -146,7 +146,7 @@ module Rubysh
       when false
         # success!
       when Hash
-        @exec_error = Rubysh::Error::ExecError.new("Failed to exec in subprocess: #{msg['message']}", msg['klass'], msg['caller'])
+        @exec_error = Rubysh::Error::ExecError.new("Failed to exec in subprocess: #{msg['message']}", msg['message'], msg['klass'], msg['caller'])
       else
         @exec_error = Rubysh::Error::BaseError.new("Invalid message received over the exec_status pipe: #{msg.inspect}")
       end
