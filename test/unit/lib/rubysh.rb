@@ -69,6 +69,19 @@ module RubyshTest::Unit
           assert_equal([Rubysh::Redirect.new(Rubysh::FD.new(2), '>', Rubysh::FD.new(1))], subprocess.directives)
         end
       end
+
+      # Rubysh('ls', '/tmp', Rubysh.stderr > Rubysh.stdout)
+      describe 'with a redirection' do
+        it 'raises if the argument is nil' do
+          assert_raises(Rubysh::Error::BaseError) {Rubysh.<(nil)}
+          assert_raises(Rubysh::Error::BaseError) {Rubysh.<(nil, :foo => :bar)}
+        end
+
+        it 'allows omitting target' do
+          Rubysh.<()
+          Rubysh.<(:foo => :bar)
+        end
+      end
     end
   end
 end

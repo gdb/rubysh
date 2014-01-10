@@ -128,46 +128,32 @@ module Rubysh
     FD.new(2)
   end
 
-  def self.>(target=nil, opts=nil)
-    # Might want to DRY this logic up at some point. Right now seems
-    # like it'd just sacrifice clarity though.
-    if !opts && target.kind_of?(Hash)
-      opts = target
-      target = nil
-    end
+  def self.>(target=(t=true; nil), opts=(o=true; nil))
+    target, opts = handle_redirect_args(target, t, opts, o)
     target ||= :stdout
 
     Redirect.new(1, '>', target, opts)
   end
 
-  def self.>>(target=nil, opts=nil)
-    if !opts && target.kind_of?(Hash)
-      opts = target
-      target = nil
-    end
+  def self.>>(target=(t=true; nil), opts=(o=true; nil))
+    target, opts = handle_redirect_args(target, t, opts, o)
     target ||= :stdout
 
     Redirect.new(1, '>>', target, opts)
   end
 
-  def self.<(target=nil, opts=nil)
-    if !opts && target.kind_of?(Hash)
-      opts = target
-      target = nil
-    end
+  def self.<(target=(t=true; nil), opts=(o=true; nil))
+    target, opts = handle_redirect_args(target, t, opts, o)
     target ||= :stdin
 
     Redirect.new(0, '<', target, opts)
   end
 
   # Hack to implement <<<
-  def self.<<(fd=nil, opts=nil)
-    if !opts && fd.kind_of?(Hash)
-      opts = fd
-      fd = nil
-    end
-
+  def self.<<(fd=(f=true; nil), opts=(o=true; nil))
+    fd, opts = handle_redirect_args(fd, f, opts, o)
     fd ||= FD.new(0)
+
     TripleLessThan::Shell.new(fd, opts)
   end
 
@@ -188,5 +174,25 @@ module Rubysh
     formatted = "#{msg}\n  #{caller.join("\n  ")}"
     log.error(formatted)
     raise msg if hard
+  end
+
+  def self.handle_redirect_args(target, target_omitted, opts, opts_omitted)
+    if opts_omitted && target.kind_of?(Hash)
+      # Shift over if user provided target as a hash but omitted opts.
+      opts = target
+      opts_omitted = target_omitted
+
+      target = nil
+      target_omitted = true
+    end
+
+    # User provided a false-y value for target. This probably
+    # indicates a bug in the user's code, where a variable is
+    # accidentally nil.
+    if !target_omitted && !target
+      raise Rubysh::Error::BaseError.new("You provided #{target.inspect} as your redirect target. This probably indicates a bug in your code. Either omit the target argument or provide a non-false-y value for it.")
+    end
+
+    return target, opts
   end
 end
