@@ -30,5 +30,36 @@ module RubyshTest::Functional
         assert_raises(Rubysh::Error::BaseError) {runner.read}
       end
     end
+
+    describe 'when registering a reader post-hoc' do
+      it 'successfully uses both the existing and new reader' do
+        buffers = {}
+        runner = Rubysh('sh', '-c', '
+echo stdout1
+read _
+echo stdout2
+',
+          Rubysh.>, Rubysh.<,
+          :on_read => Proc.new do |name, bytes|
+            (buffers[name] ||= '') << bytes
+          end
+          ).run_async
+        reader, writer = IO.pipe
+        runner.parallel_io.register_reader(reader, :pipe)
+
+        # run_once may be triggered by sigchld
+        runner.parallel_io.run_once until buffers.length > 0
+        assert_equal(nil, buffers[:pipe])
+        assert_equal("stdout1\n", buffers[:stdout])
+        buffers.clear
+
+        runner.write("stdin\n")
+        writer.write('pipe')
+
+        runner.parallel_io.run_once until buffers[:stdout]
+        assert_equal('pipe', buffers[:pipe])
+        assert_equal("stdout2\n", buffers[:stdout])
+      end
+    end
   end
 end

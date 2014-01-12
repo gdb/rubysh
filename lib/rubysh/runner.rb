@@ -1,6 +1,6 @@
 module Rubysh
   class Runner
-    attr_accessor :command, :targets
+    attr_accessor :command, :targets, :parallel_io
 
     def initialize(command)
       @runner_state = :initialized
@@ -288,11 +288,11 @@ module Rubysh
       if on_write = command.opts[:on_write]
         @parallel_io.on_write(on_write)
       else
-        @parallel_io.on_write do |target_name, written, remaining|
+        @parallel_io.on_write do |target_name, data, remaining|
           if data == Subprocess::ParallelIO::EOF
             Rubysh.log.debug("EOF reached on #{target_name.inspect}")
           else
-            Rubysh.log.debug("Just wrote #{written.inspect} on #{target_name.inspect}")
+            Rubysh.log.debug("Just wrote #{data.inspect} on #{target_name.inspect}")
           end
         end
       end
