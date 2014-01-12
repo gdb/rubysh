@@ -94,7 +94,6 @@ class Rubysh::Subprocess
       end
 
       ready_readers, ready_writers, _ = selected
-      $stdout.puts "Stuff: #{ready_readers.inspect}, #{ready_writers.inspect} (total: #{@readers.inspect}"
 
       ready_readers.each do |reader|
         read_available(reader)
@@ -115,9 +114,7 @@ class Rubysh::Subprocess
     def read_available(reader)
       begin
         data = reader.read_nonblock(4096)
-        p data
       rescue EOFError, Errno::EPIPE
-        p "done"
         finalize_reader(reader)
       rescue Errno::EAGAIN, Errno::EWOULDBLOCK, Errno::EINTR
       else
