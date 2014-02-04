@@ -67,9 +67,26 @@ You can easily read and write data interactively:
     >> runner.read(:how => :partial) # block until some output available
     => ".\n.\n.\n.\n.\n.\n.\n.\n.\n"
     >> runner.read(:how => :nonblock)
-    => ""
+    => nil
     >> runner.read # block until all output available
-    => [truncated]
+    => ".\n[...]"
+
+## Reactive output
+
+You can also receive real-time notifications as data becomes available:
+
+    >> runner = Rubysh(
+        'examples/on_read_example.sh',
+         Rubysh.stdout > :stdout, Rubysh.stderr > :stderr,
+         on_read: Proc.new {|target, data| puts "[#{target}]: #{data}"}
+        )
+    => Command: examples/on_read_example.sh >:stdout 2>:stderr {:on_read=>#<Proc:0x007f8ad3bc5790@(irb):4>}
+    >> runner.run
+    [stdout]: [1] Hello from stdout
+    [stderr]: [1] Hello from stderr
+    [stdout]: [2] Hello from stdout
+    [stderr]: [2] Hello from stderr
+    [...]
 
 ## API
 
