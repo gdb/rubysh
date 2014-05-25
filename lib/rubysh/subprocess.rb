@@ -14,11 +14,18 @@ module Rubysh
 
     # TODO: switch directives over to an OrderedHash of some form? Really
     # want to preserve the semantics here.
-    def initialize(args, directives=[], post_fork=[], runner=nil)
+    def initialize(args, blk=nil, directives=[], post_fork=[], runner=nil)
       raise ArgumentError.new("Must provide an array (#{args.inspect} provided)") unless args.kind_of?(Array)
-      raise ArgumentError.new("No command specified (#{args.inspect} provided)") unless args.length > 0
+
+      if args.length > 0 && blk
+        raise ArgumentError.new("Provided both arguments (#{args.inspect}) and a block (#{blk.inspect}). You can only provide one.")
+      elsif args.length == 0 && !blk
+        raise ArgumentError.new("No command specified (#{args.inspect} provided)")
+      end
+
       @command = args[0]
       @args = args[1..-1]
+      @blk = blk
       @directives = directives
       @runner = runner
 
@@ -35,7 +42,7 @@ module Rubysh
     end
 
     def to_s
-      "Subprocess: command=#{@command.inspect} args=#{@args.inspect} directives: #{@directives.inspect}"
+      "Subprocess: command=#{@command.inspect} blk=#{@blk.inspect} args=#{@args.inspect} directives: #{@directives.inspect}"
     end
 
     def run
@@ -93,7 +100,12 @@ module Rubysh
       @exec_status.write_only
       run_post_fork
       apply_directives_child
-      exec_program
+
+      if @blk
+        run_blk
+      else
+        exec_program
+      end
     end
 
     def run_post_fork
@@ -120,6 +132,21 @@ module Rubysh
       end
     end
 
+    def run_blk
+      # Close the writing end of the pipe
+      @exec_status.read_only
+
+      begin
+        # Run the actual block
+        @blk.call
+      rescue Exception => e
+        render_exception(e)
+        hard_exit(e)
+      else
+        hard_exit(nil)
+      end
+    end
+
     def exec_program
       begin
         Kernel.exec([command, command], *args)
@@ -131,9 +158,9 @@ module Rubysh
           'caller' => e.send(:caller)
         }
         @exec_status.dump_json_and_close(msg)
-        # Note: atexit handlers will fire in this case. May want to do
-        # something about that.
-        exit(1)
+        # Abort without running at_exit handlers or giving the user a
+        # chance to accidentally catch the exit.
+        hard_exit(e)
       else
         raise Rubysh::Error::UnreachableError.new("This code should be unreachable. If you are seeing this exception, it means someone overrode Kernel.exec. That's not very nice of them.")
       end
@@ -152,6 +179,18 @@ module Rubysh
       end
 
       raise @exec_error if @exec_error
+    end
+
+    def render_exception(e)
+      $stderr.print("[Rubysh subprocess #{$$}] #{e.class}: #{e.message}\n\t")
+      $stderr.print(e.backtrace.join("\n\t"))
+      $stderr.print("\n")
+    end
+
+    # Broken out for the tests
+    def hard_exit(exception)
+      status = exception ? 1 : 0
+      exit!(status)
     end
   end
 end

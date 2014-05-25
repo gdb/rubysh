@@ -58,6 +58,12 @@ are arbitrary symbols):
     runner.read(:stdout) # "hi\n"
     runner.read(:stderr) # ""
 
+You can also have your child run a Ruby block rather than execute a command:
+
+    command = Rubysh(Rubysh.stdout > :stdout) {puts "hi from child"}
+    runner = command.run
+    runner.read(:stdout) # "hi from child\n"
+
 ## Controlled input
 
 You can easily read and write data interactively:

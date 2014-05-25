@@ -1,16 +1,17 @@
 module Rubysh
   class Command < BaseCommand
-    attr_accessor :raw_args, :directives, :args
+    attr_accessor :raw_args, :directives, :args, :blk
 
-    def initialize(args)
+    def initialize(args, &blk)
       if args.length == 1 && args[0].kind_of?(Array)
-        raise "It looks like you created a Rubysh::Command with a singleton nested array: #{args.inspect}. That'll never be runnable, and probably indicates you forgot a splat somewhere."
+        raise Rubysh::Error::BaseError.new("It looks like you created a Rubysh::Command with a singleton nested array: #{args.inspect}. That'll never be runnable, and probably indicates you forgot a splat somewhere.")
       end
 
       @raw_args = args
       @directives = []
       @args = nil
       @opts = {}
+      @blk = blk
 
       process_args
     end
@@ -32,6 +33,10 @@ module Rubysh
           arg.to_s
         end
       end.compact
+
+      if @args.length > 0 && @blk
+        raise Rubysh::Error::BaseError.new("You can't provide command-line arguments and a block at the same time.")
+      end
     end
 
     def stringify
@@ -123,7 +128,7 @@ module Rubysh
       # pipeline, which should not win out over internal redirects.
       directives = extra_directives(runner) + @directives
       post_forks = base_post_forks + extra_post_forks(runner)
-      state(runner)[:subprocess] = Subprocess.new(args, directives, post_forks, runner)
+      state(runner)[:subprocess] = Subprocess.new(args, blk, directives, post_forks, runner)
     end
   end
 end

@@ -62,23 +62,12 @@ require 'rubysh/util'
 # Rubysh('ls', '/tmp', Rubysh.&)
 # => Command: ls /tmp &
 
-# Either create a new Rubysh command:
+# You can then create a new Rubysh command:
 #
 #  command = Rubysh('ls')
 #  command.run
-#
-# Or use the block syntax to create and run one:
-#
-#  Rubysh {'ls'}
 def Rubysh(*args, &blk)
-  if blk
-    raise Rubysh::Error::BaseError.new("Can't provide arguments and a block") if args.length > 0
-    command = blk.call
-    command = Rubysh::Command.new(command) unless command.kind_of?(Rubysh::Command)
-    command.run
-  else
-    Rubysh::Command.new(args)
-  end
+  Rubysh::Command.new(args, &blk)
 end
 
 def AliasRubysh(name)
@@ -90,22 +79,22 @@ end
 module Rubysh
   # Convenience methods
   def self.run(*args, &blk)
-    command = Rubysh::Command.new(args)
-    command.run(&blk)
+    command = Rubysh::Command.new(args, &blk)
+    command.run
   end
 
   def self.run_async(*args, &blk)
-    command = Rubysh::Command.new(args)
-    command.run_async(&blk)
+    command = Rubysh::Command.new(args, &blk)
+    command.run_async
   end
 
   def self.check_call(*args, &blk)
-    command = Rubysh::Command.new(args)
-    command.check_call(&blk)
+    command = Rubysh::Command.new(args, &blk)
+    command.check_call
   end
 
-  def self.Command(*args)
-    Command.new(*args)
+  def self.Command(*args, &blk)
+    Command.new(*args, &blk)
   end
 
   def self.Pipeline(*args)
