@@ -1,0 +1,4 @@
+=== 0.3.0 2014-05-25
+
+* Add block execution support to Rubysh. De-support old semantics here
+  providing a block was a wrapper for generating an argument array.
