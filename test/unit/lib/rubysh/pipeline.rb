@@ -72,14 +72,14 @@ module RubyshTest::Unit
 
       it 'instantiates the subprocess objects with expected arguments' do
         subprocess = stub(:run => nil)
-        Rubysh::Subprocess.expects(:new).once.with do |args, directives, post_forks|
+        Rubysh::Subprocess.expects(:new).once.with do |args, blk, directives, post_forks|
           args == ['ls', '/tmp'] &&
             directives.length == 1 &&
             directives[0].direction == '>' &&
             directives[0].source == Rubysh::FD.new(1)
         end.returns(subprocess)
 
-        Rubysh::Subprocess.expects(:new).once.with do |args, directives, post_forks|
+        Rubysh::Subprocess.expects(:new).once.with do |args, blk, directives, post_forks|
           args == ['grep', 'foo'] &&
             directives.length == 2 &&
             directives[0].direction == '<' &&
@@ -88,7 +88,7 @@ module RubyshTest::Unit
             directives[1].source == Rubysh::FD.new(1)
         end.returns(subprocess)
 
-        Rubysh::Subprocess.expects(:new).once.with do |args, directives, post_forks|
+        Rubysh::Subprocess.expects(:new).once.with do |args, blk, directives, post_forks|
           args = ['cat'] &&
             directives.length == 1 &&
             directives[0].direction == '<' &&

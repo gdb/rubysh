@@ -17,7 +17,7 @@ module RubyshTest::Unit
       end
 
       it 'raises an error when given an unsplatted array' do
-        assert_raises(RuntimeError) {Rubysh::Command.new([['ls', 'stuff']])}
+        assert_raises(Rubysh::Error::BaseError) {Rubysh::Command.new([['ls', 'stuff']])}
       end
     end
 
