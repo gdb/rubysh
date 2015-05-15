@@ -10,7 +10,7 @@ Rubysh makes shelling out easy with a __sh__-like syntax layer for Ruby:
     hello-from-Rubysh
     => Rubysh::Runner: echo hello-from-Rubysh | grep --color Rubysh (exitstatus: 0)
 
-Rubysh philosophy is to make simple tasks simple and complex tasks
+Rubysh's philosophy is to make simple tasks simple and complex tasks
 possible.
 
 ## Motivation
