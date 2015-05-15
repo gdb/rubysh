@@ -1,6 +1,4 @@
-# Rubysh
-
-Rubysh: Ruby subprocesses made easy
+# Rubysh: Ruby subprocesses made easy
 
 Rubysh makes shelling out easy with a __sh__-like syntax layer for Ruby:
 
